@@ -4,9 +4,17 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class Movies {
+class Movies(
+    private var movieDetailsProvider: MovieDetailsProvider<String>
+) {
 
-    fun getAll(): List<MovieEntity> = FastAndFurious.allReleases.sortedBy { it.releaseNumber }
+    fun getAll(): List<MovieEntity> =
+        FastAndFurious.allReleases.sortedBy { it.releaseNumber }
+
+    fun getMovieDetails(id: UUID): MovieDetails? {
+        val movie = FastAndFurious.allReleases.find { it.id == id }
+        return movie?.let { movieDetailsProvider.fetchDetails(it.externalId) }
+    }
 
 }
 

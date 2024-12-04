@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: fnf-cinema
+  sql.init.mode: always
+springdoc:
+  swagger-ui:
+    path: /api-doc
+integrations:
+  imdb:
+    api-key: ${IMDB_API_KEY}
+    base-url: http://www.omdbapi.com
+
+logging.level.org.springframework.jdbc.core: TRACE

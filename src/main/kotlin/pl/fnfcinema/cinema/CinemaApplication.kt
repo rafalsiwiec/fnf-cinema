@@ -1,17 +1,16 @@
 package pl.fnfcinema.cinema
 
-import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
+import pl.fnfcinema.cinema.integrations.imdb.ImdbIntegrationConfig
 
 
 @SpringBootApplication
-class CinemaApplication(
-) : CommandLineRunner {
-
-    override fun run(vararg args: String?) {
-    }
-}
+@EnableConfigurationProperties(
+    ImdbIntegrationConfig::class
+)
+class CinemaApplication
 
 fun main(args: Array<String>) {
     runApplication<CinemaApplication>(*args)
