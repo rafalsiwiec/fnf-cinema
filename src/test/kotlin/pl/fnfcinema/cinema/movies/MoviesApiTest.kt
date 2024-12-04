@@ -20,10 +20,7 @@ class MoviesApiTest(
         val searchQuery = "f9"
 
         // when
-        val response = mockMvc.perform(
-            get("/movies")
-                .queryParam("q", searchQuery)
-        ).andReturn().response
+        val response = mockMvc.perform(get("/movies")).andReturn().response
 
         // then
         assertEquals(200, response.status)
@@ -31,11 +28,10 @@ class MoviesApiTest(
         val foundMovies = objectMapper.readerFor(Movie::class.java)
             .readValues<Movie>(response.contentAsByteArray)
             .readAll()
+        assertEquals(9, foundMovies.size)
         assertEquals(
-            listOf(
-                Movie(UUID.fromString("950142cf-a417-4238-a225-f9283844f17d"), "F9: The Fast Saga")
-            ),
-            foundMovies
+            Movie(UUID.fromString("950142cf-a417-4238-a225-f9283844f17d"), "F9: The Fast Saga"),
+            foundMovies.last()
         )
     }
 }

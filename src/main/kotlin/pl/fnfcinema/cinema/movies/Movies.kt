@@ -6,12 +6,7 @@ import java.util.*
 @Service
 class Movies {
 
-    fun findByTitle(query: String): List<MovieEntity> {
-        require(query.isNotBlank())
-        val normalizedQueryStr = query.trim().lowercase()
-        return FastAndFurious.allReleases
-            .filter { it.title.lowercase().contains(normalizedQueryStr) }
-    }
+    fun getAll(): List<MovieEntity> = FastAndFurious.allReleases.sortedBy { it.releaseNumber }
 
 }
 
