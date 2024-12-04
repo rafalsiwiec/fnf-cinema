@@ -5,7 +5,7 @@ import java.util.*
 
 @Service
 class Movies(
-    private var movieDetailsProvider: MovieDetailsProvider<String>
+    private val movieDetailsProvider: MovieDetailsProvider
 ) {
 
     fun getAll(): List<MovieEntity> =

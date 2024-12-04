@@ -9,5 +9,8 @@ integrations:
   imdb:
     api-key: ${IMDB_API_KEY}
     base-url: http://www.omdbapi.com
+    cache:
+      max-size: 1000
+      expire-after: PT15M
 
 logging.level.org.springframework.jdbc.core: TRACE

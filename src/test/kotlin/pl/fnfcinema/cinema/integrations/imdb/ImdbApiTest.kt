@@ -30,7 +30,7 @@ class ImdbApiTest {
                     .withBody(File("src/test/data/imdb/example.json").readText())
             )
 
-        val config = ImdbIntegrationConfig(
+        val config = ImdbIntegrationProperties(
             MockServerExtension.serverUri(),
             "api-key-123"
         )
@@ -68,7 +68,7 @@ class ImdbApiTest {
         server.`when`(request("/"))
             .respond(notFoundResponse().withBody("askdjjkfdhasjhdfs"))
 
-        val config = ImdbIntegrationConfig(
+        val config = ImdbIntegrationProperties(
             MockServerExtension.serverUri(),
             "api-key-123"
         )

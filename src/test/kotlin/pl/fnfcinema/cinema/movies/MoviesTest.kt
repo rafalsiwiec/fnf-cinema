@@ -1,7 +1,13 @@
 package pl.fnfcinema.cinema.movies
 
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
+import pl.fnfcinema.cinema.integrations.imdb.ImdbMovieFixtures.anImdbMovie
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -29,5 +35,45 @@ class MoviesTest(
             ),
             results
         )
+    }
+
+    @Test
+    fun should_cache_movie_details_fetched_from_provider() {
+        // given
+        val movieId = UUID.fromString("8abee5c7-ad72-4e09-9b8d-9dd1f0c08911")
+        val imdbMovie = anImdbMovie()
+
+        `when`(imdbApi.fetchMovieById("tt2820852")).thenReturn(imdbMovie)
+
+        // when
+        val firstResult = movies.getMovieDetails(movieId)
+
+        // then
+        verify(imdbApi).fetchMovieById("tt2820852")
+        verifyNoMoreInteractions(imdbApi)
+        reset(imdbApi)
+
+        assertEquals(
+            MovieDetails(
+                imdbMovie.title,
+                imdbMovie.releaseDate,
+                imdbMovie.runtime,
+                imdbMovie.genre,
+                imdbMovie.director,
+                imdbMovie.imdbRating,
+                10,
+                imdbMovie.imdbVotes.value,
+                imdbMovie.poster,
+                imdbMovie.awards,
+            ),
+            firstResult
+        )
+
+        // when
+        val secondResult = movies.getMovieDetails(movieId)
+
+        // then
+        assertEquals(firstResult, secondResult)
+        verifyNoInteractions(imdbApi)
     }
 }

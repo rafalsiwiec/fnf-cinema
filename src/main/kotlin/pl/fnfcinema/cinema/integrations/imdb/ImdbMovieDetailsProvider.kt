@@ -1,11 +1,14 @@
-package pl.fnfcinema.cinema.movies
+package pl.fnfcinema.cinema.integrations.imdb
 
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
-import pl.fnfcinema.cinema.integrations.imdb.ImdbApi
+import pl.fnfcinema.cinema.movies.MovieDetails
+import pl.fnfcinema.cinema.movies.MovieDetailsProvider
 
 @Service
-class ImdbMovieDetailsProvider(private val imdbApi: ImdbApi) : MovieDetailsProvider<String> {
+class ImdbMovieDetailsProvider(private val imdbApi: ImdbApi) : MovieDetailsProvider {
 
+    @Cacheable(ImdbMoviesCacheConfig.CACHE_NAME)
     override fun fetchDetails(id: String): MovieDetails {
         val imdbMovie = imdbApi.fetchMovieById(id)
         return MovieDetails(

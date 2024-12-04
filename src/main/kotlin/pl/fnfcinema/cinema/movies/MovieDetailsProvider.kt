@@ -4,9 +4,9 @@ import java.math.BigDecimal
 import java.net.URI
 import java.time.LocalDate
 
-interface MovieDetailsProvider<T> {
+interface MovieDetailsProvider {
 
-    fun fetchDetails(id: T): MovieDetails
+    fun fetchDetails(id: String): MovieDetails
 
 }
 

@@ -1,5 +1,6 @@
 package pl.fnfcinema.cinema.integrations.imdb
 
+import mu.KotlinLogging
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.MediaType.APPLICATION_JSON
@@ -16,13 +17,15 @@ class ImdbApiFactory {
     companion object {
         @Bean
         @JvmStatic
-        fun create(config: ImdbIntegrationConfig): ImdbApi = ImdbApiImpl(config)
+        fun create(config: ImdbIntegrationProperties): ImdbApi = ImdbApiImpl(config)
     }
 }
 
 private class ImdbApiImpl(
-    private val config: ImdbIntegrationConfig,
+    private val config: ImdbIntegrationProperties,
 ) : ImdbApi {
+
+    private val logger = KotlinLogging.logger {}
 
     private val client = WebClient.builder()
         .baseUrl(config.baseUrl.toString())
@@ -30,6 +33,7 @@ private class ImdbApiImpl(
 
     override fun fetchMovieById(id: String): ImdbMovie =
         try {
+            logger.info { "Will fetch imdbMovie with id: $id" }
             client.get()
                 .uri {
                     it.queryParam("apikey", config.apiKey)
