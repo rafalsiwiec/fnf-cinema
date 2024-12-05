@@ -1,18 +1,16 @@
 package pl.fnfcinema.cinema.movies
 
+import io.mockk.confirmVerified
+import io.mockk.every
+import io.mockk.verify
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.reset
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import pl.fnfcinema.cinema.IntegrationTest
 import pl.fnfcinema.cinema.integrations.imdb.ImdbMovieFixtures.anImdbMovie
 import kotlin.test.assertEquals
 
 class MoviesTest(
-    @Autowired val movies: Movies
+    @Autowired val movies: Movies,
 ) : IntegrationTest() {
 
     @Test
@@ -40,15 +38,14 @@ class MoviesTest(
         val savedMovie = movies.addMovie(MovieEntity("title 123", imdbId))
 
         val imdbMovie = anImdbMovie()
-        `when`(imdbApi.fetchMovieById(imdbId)).thenReturn(imdbMovie)
+        every { imdbApi.fetchMovieById(imdbId) } returns imdbMovie
 
         // when
         val firstResult = movies.getMovieDetails(savedMovie.id!!)
 
         // then
-        verify(imdbApi).fetchMovieById(imdbId)
-        verifyNoMoreInteractions(imdbApi)
-        reset(imdbApi)
+        verify(exactly = 1) { imdbApi.fetchMovieById(imdbId) }
+        confirmVerified(imdbApi)
 
         assertEquals(
             MovieDetails(
@@ -71,6 +68,8 @@ class MoviesTest(
 
         // then
         assertEquals(firstResult, secondResult)
-        verifyNoInteractions(imdbApi)
+
+        // no additional call to imdbApi was performed
+        confirmVerified(imdbApi)
     }
 }

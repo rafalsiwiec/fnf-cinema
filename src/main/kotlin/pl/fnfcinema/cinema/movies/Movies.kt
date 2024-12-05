@@ -19,4 +19,6 @@ class Movies(
 
     fun addMovie(newMovie: MovieEntity): MovieEntity = movieRepository.save(newMovie)
 
+    fun findMovie(id: UUID): MovieEntity? = movieRepository.findByIdOrNull(id)
+
 }

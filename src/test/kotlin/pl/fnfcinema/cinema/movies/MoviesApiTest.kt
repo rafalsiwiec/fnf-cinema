@@ -1,10 +1,9 @@
 package pl.fnfcinema.cinema.movies
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.every
+import io.mockk.verify
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.MockMvc
@@ -29,8 +28,7 @@ class MoviesApiTest(
         val newMovieId = UUID.randomUUID()
         val savedMovie = newMovie.copy(id = newMovieId)
 
-        `when`(movies.addMovie(newMovie))
-            .thenReturn(savedMovie)
+        every { movies.addMovie(any()) } returns savedMovie
 
         // when
         val response = mockMvc.perform(
@@ -40,8 +38,7 @@ class MoviesApiTest(
         ).andReturn().response
 
         // then
-        verify(movies).addMovie(newMovie)
-        verifyNoMoreInteractions(movies)
+        verify { movies.addMovie(newMovie) }
 
         assertEquals(201, response.status)
         val responseBody = objectMapper.readValue(response.contentAsByteArray, BasicMovie::class.java)
@@ -53,7 +50,8 @@ class MoviesApiTest(
         // given
         val firstMovie = MovieEntity("some-title-1", "tt0000001", UUID.randomUUID())
         val secondMovie = MovieEntity("some-title-2", "tt0000002", UUID.randomUUID())
-        `when`(movies.getAll()).thenReturn(listOf(firstMovie, secondMovie))
+
+        every { movies.getAll() } returns listOf(firstMovie, secondMovie)
 
         // when
         val response = mockMvc.perform(get("/movies")).andReturn().response
@@ -72,6 +70,8 @@ class MoviesApiTest(
             ),
             foundMovies
         )
+
+        verify { movies.getAll() }
     }
 
     @Test
@@ -79,7 +79,7 @@ class MoviesApiTest(
         // given
         val id = UUID.randomUUID()
 
-        `when`(movies.getMovieDetails(id)).thenReturn(null)
+        every { movies.getMovieDetails(id) } returns null
 
         // when
         val response = mockMvc.perform(get("/movies/{id}", id)).andReturn().response
@@ -87,7 +87,6 @@ class MoviesApiTest(
         // then
         assertEquals(404, response.status)
 
-        verify(movies).getMovieDetails(id)
-        verifyNoMoreInteractions(movies)
+        verify { movies.getMovieDetails(id) }
     }
 }

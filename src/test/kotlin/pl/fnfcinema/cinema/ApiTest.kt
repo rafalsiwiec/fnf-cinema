@@ -1,32 +1,20 @@
 package pl.fnfcinema.cinema
 
-import org.junit.jupiter.api.BeforeEach
-import org.mockito.Mockito
-import org.mockito.Mockito.mock
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.confirmVerified
+import org.junit.jupiter.api.AfterEach
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Import
-import org.springframework.context.annotation.Primary
 import pl.fnfcinema.cinema.movies.Movies
+import pl.fnfcinema.cinema.shows.Shows
 
 @WebMvcTest
-@Import(ApiTest.Config::class)
 abstract class ApiTest {
 
-    @BeforeEach
-    fun setUp() {
-        Mockito.reset(movies)
-    }
+    @MockkBean lateinit var movies: Movies
+    @MockkBean lateinit var shows: Shows
 
-    companion object {
-        val movies: Movies = mock()
-    }
-
-    @TestConfiguration
-    class Config {
-        @Bean
-        @Primary
-        fun movies(): Movies = movies
+    @AfterEach
+    fun tearDown() {
+        confirmVerified(movies, shows)
     }
 }

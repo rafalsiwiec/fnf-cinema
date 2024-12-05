@@ -1,32 +1,46 @@
 package pl.fnfcinema.cinema
 
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.confirmVerified
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.mockito.Mockito
-import org.mockito.Mockito.mock
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
+import org.springframework.data.repository.CrudRepository
 import pl.fnfcinema.cinema.integrations.imdb.ImdbApi
 
 @SpringBootTest
-@Import(IntegrationTest.Config::class)
-abstract class IntegrationTest {
+@Import(IntegrationTest.TestConfig::class)
+abstract class IntegrationTest : BaseTest() {
+
+    @MockkBean
+    lateinit var imdbApi: ImdbApi
+
+    @Autowired
+    lateinit var mutableClock: MutableClock
+
+    @Autowired
+    lateinit var repos: List<CrudRepository<*, *>>
 
     @BeforeEach
     fun setUp() {
-        Mockito.reset(imdbApi)
+        repos.forEach { it.deleteAll() }
     }
 
-    companion object {
-        val imdbApi: ImdbApi = mock()
+    @AfterEach
+    fun tearDown() {
+        confirmVerified(imdbApi)
     }
 
     @TestConfiguration
-    class Config {
+    class TestConfig {
+
         @Bean
         @Primary
-        fun imdbApi(): ImdbApi = imdbApi
+        fun mutableClock(): MutableClock = MutableClock()
     }
 }
