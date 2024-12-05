@@ -31,6 +31,9 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.5.12")
 
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
+
     // FIXME! change before PROD :--)
     implementation("org.testcontainers:postgresql:1.20.4")
     implementation("org.springframework.boot:spring-boot-testcontainers:3.4.0")

@@ -1,4 +1,4 @@
-package pl.fnfcinema.cinema.movies
+package pl.fnfcinema.cinema
 
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
@@ -9,26 +9,26 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
-import pl.fnfcinema.cinema.integrations.imdb.ImdbApi
+import pl.fnfcinema.cinema.movies.Movies
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(IntegrationTest.Config::class)
-abstract class IntegrationTest {
+@Import(ApiTest.Config::class)
+abstract class ApiTest {
 
     @BeforeEach
     fun setUp() {
-        Mockito.reset(imdbApi)
+        Mockito.reset(movies)
     }
 
     companion object {
-        val imdbApi: ImdbApi = mock()
+        val movies: Movies = mock()
     }
 
     @TestConfiguration
     class Config {
         @Bean
         @Primary
-        fun imdbApi(): ImdbApi = imdbApi
+        fun movies(): Movies = movies
     }
 }
