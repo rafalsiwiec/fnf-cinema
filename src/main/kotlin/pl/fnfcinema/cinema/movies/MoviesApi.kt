@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pl.fnfcinema.cinema.Api
+import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.movies.MoviesApi.Requests.NewMovie
 import pl.fnfcinema.cinema.movies.MoviesApi.Responses.BasicMovie
 import java.math.BigDecimal
@@ -34,7 +35,7 @@ class MoviesApi(private val movies: Movies) {
         Api.entityOrNotFound(movies.getMovieDetails(id)?.toResponse(id))
 
     object Requests {
-        data class NewMovie(val title: String, val imdbId: String)
+        data class NewMovie(val title: String, val imdbId: String, val defaultTicketPrice: Money)
     }
 
     object Responses {

@@ -30,13 +30,13 @@ class ShowsApiTest(
         val newShow = Requests.NewShow(
             movieId = UUID.randomUUID(),
             startTime = Instant.now(),
-            price = Money(20_00)
+            ticketPrice = Money(20.00.toBigDecimal())
         )
 
         val newShowEntity = ShowEntity(
             AggregateReference.to(newShow.movieId),
             newShow.startTime,
-            Money(20_00)
+            Money(20.00.toBigDecimal())
         )
 
         val createdShowEntityId = UUID.randomUUID()
@@ -64,7 +64,7 @@ class ShowsApiTest(
     @Test
     fun should_respond_http400_for_invalid_data() {
         // given
-        val newShow = Requests.NewShow(UUID.randomUUID(), Instant.now(), Money(20_00))
+        val newShow = Requests.NewShow(UUID.randomUUID(), Instant.now(), aMoney())
 
         every { shows.addShow(any()) } returns Error(InvalidData("some error"))
 
@@ -82,7 +82,7 @@ class ShowsApiTest(
                 ShowEntity(
                     AggregateReference.to(newShow.movieId),
                     newShow.startTime,
-                    Money(20_00)
+                    newShow.ticketPrice
                 )
             )
         }

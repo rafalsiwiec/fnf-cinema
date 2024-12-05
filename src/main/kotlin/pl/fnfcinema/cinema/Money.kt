@@ -1,13 +1,10 @@
 package pl.fnfcinema.cinema
 
 import java.math.BigDecimal
-import java.util.Currency
+import java.util.*
 
-data class Money(val amount: BigDecimal, val currency: Currency) {
-
-    constructor(amount: Int) : this(BigDecimal(amount), PLN)
-
+data class Money(val amount: BigDecimal, val currency: Currency = PLN) {
     companion object {
-        val PLN = Currency.getInstance("PLN")
+        val PLN: Currency = Currency.getInstance("PLN")
     }
 }

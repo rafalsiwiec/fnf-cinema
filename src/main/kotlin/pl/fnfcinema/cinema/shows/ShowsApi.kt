@@ -47,7 +47,7 @@ class ShowsApi(
     }
 
     object Requests {
-        data class NewShow(val movieId: UUID, val startTime: Instant, val price: Money)
+        data class NewShow(val movieId: UUID, val startTime: Instant, val ticketPrice: Money)
     }
 
     object Responses {
@@ -56,7 +56,7 @@ class ShowsApi(
 
     companion object {
         private fun Requests.NewShow.toEntity() =
-            ShowEntity(AggregateReference.to(this.movieId), startTime, price)
+            ShowEntity(AggregateReference.to(this.movieId), startTime, ticketPrice)
 
         private fun ShowEntity.toShow() =
             Responses.Show(id!!, startTime)

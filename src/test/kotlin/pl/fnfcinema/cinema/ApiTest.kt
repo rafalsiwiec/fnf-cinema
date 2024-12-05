@@ -8,7 +8,7 @@ import pl.fnfcinema.cinema.movies.Movies
 import pl.fnfcinema.cinema.shows.Shows
 
 @WebMvcTest
-abstract class ApiTest {
+abstract class ApiTest : BaseTest() {
 
     @MockkBean lateinit var movies: Movies
     @MockkBean lateinit var shows: Shows

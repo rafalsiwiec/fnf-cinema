@@ -6,7 +6,6 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import pl.fnfcinema.cinema.IntegrationTest
-import pl.fnfcinema.cinema.integrations.imdb.ImdbMovieFixtures.anImdbMovie
 import kotlin.test.assertEquals
 
 class MoviesTest(

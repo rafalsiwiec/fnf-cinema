@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import pl.fnfcinema.cinema.Error
 import pl.fnfcinema.cinema.IntegrationTest
 import pl.fnfcinema.cinema.Success
-import pl.fnfcinema.cinema.movies.MovieEntityFixtures.aMovie
 import pl.fnfcinema.cinema.movies.Movies
-import pl.fnfcinema.cinema.shows.ShowEntityFixtures.aShow
 import pl.fnfcinema.cinema.shows.Shows.Errors.InvalidData
 import java.time.Instant
 import java.util.*
