@@ -1,6 +1,5 @@
 package pl.fnfcinema.cinema.shows
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -16,6 +15,8 @@ import pl.fnfcinema.cinema.ApiTest
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.aShow
+import pl.fnfcinema.cinema.aTicketPrice
 import pl.fnfcinema.cinema.shows.Shows.Errors.BadInput
 import pl.fnfcinema.cinema.shows.Shows.Errors.ShowNotFound
 import pl.fnfcinema.cinema.shows.ShowsApi.Requests
@@ -28,7 +29,6 @@ import kotlin.time.toJavaDuration
 
 class ShowsApiTest(
     @Autowired val mockMvc: MockMvc,
-    @Autowired val json: ObjectMapper,
 ) : ApiTest() {
 
     @Test

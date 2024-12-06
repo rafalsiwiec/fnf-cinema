@@ -9,7 +9,10 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.IntegrationTest
+import pl.fnfcinema.cinema.aMovie
+import pl.fnfcinema.cinema.anImdbMovie
 import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
+import pl.fnfcinema.cinema.requireSucc
 import java.util.*
 import kotlin.test.assertEquals
 

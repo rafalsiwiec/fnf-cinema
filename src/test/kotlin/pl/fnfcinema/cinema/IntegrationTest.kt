@@ -15,7 +15,7 @@ import pl.fnfcinema.cinema.integrations.imdb.ImdbApi
 
 @SpringBootTest
 @Import(IntegrationTest.TestConfig::class)
-abstract class IntegrationTest : BaseTest() {
+abstract class IntegrationTest {
 
     @MockkBean
     lateinit var imdbApi: ImdbApi

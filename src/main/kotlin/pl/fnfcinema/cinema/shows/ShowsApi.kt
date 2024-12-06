@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController
 import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.Api.asErrorResponse
 import pl.fnfcinema.cinema.Err
-import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.shows.Shows.Errors.ShowsError
 import java.time.Instant

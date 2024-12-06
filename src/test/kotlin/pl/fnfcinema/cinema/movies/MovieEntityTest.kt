@@ -1,10 +1,10 @@
 package pl.fnfcinema.cinema.movies
 
 import org.junit.jupiter.api.Test
-import pl.fnfcinema.cinema.BaseTest
+import pl.fnfcinema.cinema.aMovie
 import kotlin.test.assertEquals
 
-class MovieEntityTest : BaseTest() {
+class MovieEntityTest {
 
     @Test
     fun `should record rating`() {

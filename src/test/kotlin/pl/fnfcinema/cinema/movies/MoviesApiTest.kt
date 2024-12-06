@@ -14,6 +14,9 @@ import pl.fnfcinema.cinema.ApiTest
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.OptimisticLocking
 import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.aMovie
+import pl.fnfcinema.cinema.aRate
+import pl.fnfcinema.cinema.aTicketPrice
 import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
 import pl.fnfcinema.cinema.movies.Movies.Errors.MovieNotFound
 import pl.fnfcinema.cinema.movies.MoviesApi.Requests.NewMovie
@@ -23,7 +26,6 @@ import kotlin.test.assertEquals
 
 class MoviesApiTest(
     @Autowired val mockMvc: MockMvc,
-    @Autowired val json: ObjectMapper,
 ) : ApiTest() {
 
     @Test

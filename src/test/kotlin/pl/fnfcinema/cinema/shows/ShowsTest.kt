@@ -5,7 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.IntegrationTest
 import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.aMovie
+import pl.fnfcinema.cinema.aShow
 import pl.fnfcinema.cinema.movies.Movies
+import pl.fnfcinema.cinema.requireSucc
 import pl.fnfcinema.cinema.shows.Shows.Errors.BadInput
 import java.time.Instant
 import java.util.*
