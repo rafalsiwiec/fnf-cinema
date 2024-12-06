@@ -6,10 +6,10 @@ import kotlin.time.Duration.Companion.seconds
 
 object OptimisticLocking {
 
-    private val defaultRetryPeriod = 1.seconds
+    private val defaultRetryTimeout = 1.seconds
 
-    fun <T> rerunOnConflict(withinMax: Duration = defaultRetryPeriod, code: () -> T): T {
-        val timeout = withinMax.inWholeMilliseconds
+    fun <T> rerunOnConflict(withinAtMax: Duration = defaultRetryTimeout, code: () -> T): T {
+        val timeout = withinAtMax.inWholeMilliseconds
         val start = System.currentTimeMillis()
         var latestError: OptimisticLockingFailureException?
         do {

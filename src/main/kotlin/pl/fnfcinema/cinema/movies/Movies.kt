@@ -29,7 +29,7 @@ class Movies(
     fun rate(id: UUID, rateValue: Int): Res<MovieEntity, Errors.MoviesError> {
         val rate = Rate.create(rateValue) ?: return Err(Errors.BadInput("Invalid rate value"))
 
-        return rerunOnConflict(withinMax = 500.milliseconds) {
+        return rerunOnConflict(withinAtMax = 500.milliseconds) {
             when (val movie = movieRepository.findByIdOrNull(id)) {
                 null -> Err(Errors.MovieNotFound(id))
                 else -> Succ(movieRepository.save(movie.rate(rate)))
