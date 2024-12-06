@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.Api.asErrorResponse
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Money
@@ -38,7 +39,7 @@ class ShowsApi(
         @RequestBody showUpdate: Requests.ShowUpdate,
     ): ResponseEntity<Responses.Show> {
         val (startTime, ticketPrice) = showUpdate
-        return when (val result = shows.updateShow(showId = id, startTime = startTime, ticketPrice = ticketPrice)) {
+        return when (val result = shows.updateShow(showId = id, startTime = startTime, ticketPrice = ticketPrice.toMoney())) {
             is Succ<ShowEntity> -> ResponseEntity.ok(result.value.toShow())
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
@@ -62,8 +63,8 @@ class ShowsApi(
         }
 
     object Requests {
-        data class NewShow(val movieId: UUID, val startTime: Instant, val ticketPrice: Money)
-        data class ShowUpdate(val startTime: Instant, val ticketPrice: Money)
+        data class NewShow(val movieId: UUID, val startTime: Instant, val ticketPrice: Api.Money)
+        data class ShowUpdate(val startTime: Instant, val ticketPrice: Api.Money)
     }
 
     object Responses {
@@ -72,7 +73,11 @@ class ShowsApi(
 
     companion object {
         private fun Requests.NewShow.toEntity() =
-            ShowEntity(AggregateReference.to(this.movieId), startTime, ticketPrice)
+            ShowEntity(
+                AggregateReference.to(this.movieId),
+                startTime,
+                ticketPrice.toMoney()
+            )
 
         private fun ShowEntity.toShow() =
             Responses.Show(id!!, startTime)

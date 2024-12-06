@@ -37,7 +37,7 @@ class ShowsApiTest(
         val newShow = Requests.NewShow(
             movieId = UUID.randomUUID(),
             startTime = Instant.now(),
-            ticketPrice = Money(20.00.toBigDecimal())
+            ticketPrice = Api.Money(20.00.toBigDecimal(), "PLN")
         )
 
         val newShowEntity = ShowEntity(
@@ -88,7 +88,7 @@ class ShowsApiTest(
         val unknownShowId = UUID.randomUUID()
 
         every { shows.deleteShow(any()) } returns Err(ShowNotFound(unknownShowId))
-        
+
         // when
         val response = mockMvc.perform(delete("/shows/$unknownShowId")).andReturn().response
 
@@ -120,7 +120,7 @@ class ShowsApiTest(
                     json.writeValueAsBytes(
                         Requests.ShowUpdate(
                             startTime = updatedShow.startTime,
-                            ticketPrice = updatedShow.ticketPrice
+                            ticketPrice = Api.Money(updatedShow.ticketPrice)
                         )
                     )
                 )
@@ -137,7 +137,7 @@ class ShowsApiTest(
         val unknownShowId = UUID.randomUUID()
         val updateReq = Requests.ShowUpdate(
             Instant.now() + 3.days.toJavaDuration(),
-            aTicketPrice()
+            Api.Money(aTicketPrice())
         )
         every { shows.updateShow(any(), any(), any()) } returns Err(ShowNotFound(unknownShowId))
 
@@ -149,7 +149,7 @@ class ShowsApiTest(
         ).andReturn().response
 
         // then
-        verify { shows.updateShow(unknownShowId, updateReq.startTime, updateReq.ticketPrice) }
+        verify { shows.updateShow(unknownShowId, updateReq.startTime, updateReq.ticketPrice.toMoney()) }
 
         assertEquals(404, response.status)
         assertEquals(
@@ -161,7 +161,7 @@ class ShowsApiTest(
     @Test
     fun should_respond_http400_for_invalid_data() {
         // given
-        val newShow = Requests.NewShow(UUID.randomUUID(), Instant.now(), aTicketPrice())
+        val newShow = Requests.NewShow(UUID.randomUUID(), Instant.now(), Api.Money(aTicketPrice()))
 
         every { shows.addShow(any()) } returns Err(BadInput("some error"))
 
@@ -179,7 +179,7 @@ class ShowsApiTest(
                 ShowEntity(
                     AggregateReference.to(newShow.movieId),
                     newShow.startTime,
-                    newShow.ticketPrice
+                    newShow.ticketPrice.toMoney()
                 )
             )
         }
