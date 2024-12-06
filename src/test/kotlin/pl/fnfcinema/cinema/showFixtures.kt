@@ -31,20 +31,20 @@ fun aShow(
     id = id
 )
 
-fun aNewShow(
+fun anAddShowReq(
     movieId: UUID = UUID.randomUUID(),
     startTime: Instant = aFutureStartTime(),
     ticketPrice: Api.Money = Api.Money(aTicketPrice()),
-) = ShowsApi.Requests.NewShow(
+) = ShowsApi.AddShowReq(
     movieId = movieId,
     startTime = startTime,
     ticketPrice = ticketPrice
 )
 
-fun aShowUpdate(
+fun anUpdateShowReq(
     startTime: Instant = aFutureStartTime(),
     ticketPrice: Api.Money = Api.Money(aTicketPrice()),
-) = ShowsApi.Requests.ShowUpdate(
+) = ShowsApi.UpdateShowReq(
     startTime = startTime,
     ticketPrice = ticketPrice,
 )

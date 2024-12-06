@@ -37,9 +37,9 @@ class ShowsApi(
 
     @SecurityRequirement(name = STAFF_ONLY)
     @PostMapping(consumes = [APPLICATION_JSON_VALUE], produces = [APPLICATION_JSON_VALUE])
-    fun addShow(@RequestBody newShow: Requests.NewShow): ResponseEntity<Responses.Show> {
+    fun addShow(@RequestBody addShowReq: AddShowReq): ResponseEntity<ShowRes> {
         val staffUserId = Api.Security.requireStaffUserId()
-        return when (val result = shows.addShow(newShow.toEntity(staffUserId))) {
+        return when (val result = shows.addShow(addShowReq.toEntity(staffUserId))) {
             is Succ<ShowEntity> -> ResponseEntity.status(201).body(result.value.toShow())
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
@@ -49,8 +49,8 @@ class ShowsApi(
     @PutMapping("/{id}", consumes = [APPLICATION_JSON_VALUE], produces = [APPLICATION_JSON_VALUE])
     fun updateShow(
         @PathVariable("id") id: UUID,
-        @RequestBody showUpdate: Requests.ShowUpdate,
-    ): ResponseEntity<Responses.Show> {
+        @RequestBody showUpdate: UpdateShowReq,
+    ): ResponseEntity<ShowRes> {
         Api.Security.requireStaffUserId()
         val (startTime, ticketPrice) = showUpdate
         return when (val result =
@@ -61,7 +61,7 @@ class ShowsApi(
     }
 
     @SecurityRequirement(name = STAFF_ONLY)
-    @DeleteMapping("/{id}", produces = [ALL_VALUE])
+    @DeleteMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     fun deleteShow(@PathVariable("id") id: UUID): ResponseEntity<Unit> {
         Api.Security.requireStaffUserId()
         return when (val result = shows.deleteShow(showId = ShowId(id))) {
@@ -74,23 +74,18 @@ class ShowsApi(
     fun findNearestShows(
         @RequestParam(required = false, name = "movie") movieId: UUID?,
         @RequestParam(name = "limit", defaultValue = "10") limit: Int,
-    ): ResponseEntity<List<Responses.Show>> =
+    ): ResponseEntity<List<ShowRes>> =
         when (val result = shows.findNearest(movieId?.let(::MovieId), limit)) {
             is Succ<List<ShowEntity>> -> ResponseEntity.ok(result.value.map { it.toShow() })
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
 
-    object Requests {
-        data class NewShow(val movieId: UUID, val startTime: Instant, val ticketPrice: Api.Money)
-        data class ShowUpdate(val startTime: Instant, val ticketPrice: Api.Money)
-    }
-
-    object Responses {
-        data class Show(val id: UUID, val startTime: Instant)
-    }
+    data class AddShowReq(val movieId: UUID, val startTime: Instant, val ticketPrice: Api.Money)
+    data class UpdateShowReq(val startTime: Instant, val ticketPrice: Api.Money)
+    data class ShowRes(val id: UUID, val startTime: Instant)
 
     companion object {
-        private fun Requests.NewShow.toEntity(staffUserId: StaffUserId) =
+        private fun AddShowReq.toEntity(staffUserId: StaffUserId) =
             ShowEntity(
                 movieId = MovieId(movieId),
                 startTime = startTime,
@@ -99,7 +94,7 @@ class ShowsApi(
             )
 
         private fun ShowEntity.toShow() =
-            Responses.Show(id!!.value, startTime)
+            ShowRes(id!!.value, startTime)
 
         private fun errorDetails(err: ShowsError): Pair<Int, String> =
             when (err) {

@@ -14,16 +14,14 @@ import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.aFutureStartTime
-import pl.fnfcinema.cinema.aNewShow
 import pl.fnfcinema.cinema.aShow
-import pl.fnfcinema.cinema.aShowUpdate
 import pl.fnfcinema.cinema.aStaffUserId
 import pl.fnfcinema.cinema.aTicketPrice
+import pl.fnfcinema.cinema.anAddShowReq
+import pl.fnfcinema.cinema.anUpdateShowReq
 import pl.fnfcinema.cinema.movies.MovieId
 import pl.fnfcinema.cinema.shows.Shows.Errors.BadInput
 import pl.fnfcinema.cinema.shows.Shows.Errors.ShowNotFound
-import pl.fnfcinema.cinema.shows.ShowsApi.Requests
-import pl.fnfcinema.cinema.shows.ShowsApi.Responses
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
@@ -36,15 +34,15 @@ class ShowsApiTest : ApiTest() {
     fun should_add_new_show() {
         // given
         val staffUserId = aStaffUserId()
-        val newShow = Requests.NewShow(
+        val addShowReq = ShowsApi.AddShowReq(
             movieId = UUID.randomUUID(),
             startTime = Instant.now(),
             ticketPrice = Api.Money(20.00.toBigDecimal(), "PLN")
         )
 
         val newShowEntity = ShowEntity(
-            movieId = MovieId(newShow.movieId),
-            startTime = newShow.startTime,
+            movieId = MovieId(addShowReq.movieId),
+            startTime = addShowReq.startTime,
             ticketPrice = Money(20.00.toBigDecimal()),
             createdBy = staffUserId
         )
@@ -57,7 +55,7 @@ class ShowsApiTest : ApiTest() {
             post("/shows")
                 .contentType(APPLICATION_JSON)
                 .header(X_STAFF_USER_ID_HEADER, staffUserId.id)
-                .content(json.writeValueAsBytes(newShow))
+                .content(json.writeValueAsBytes(addShowReq))
         ).andReturn().response
 
         // then
@@ -65,7 +63,7 @@ class ShowsApiTest : ApiTest() {
 
         assertEquals(201, response.status)
         assertEquals(
-            Responses.Show(createdShowEntityId.value, newShow.startTime),
+            ShowsApi.ShowRes(createdShowEntityId.value, addShowReq.startTime),
             json.parse(response)
         )
     }
@@ -73,7 +71,7 @@ class ShowsApiTest : ApiTest() {
     @Test
     fun `should secure add show endpoint and require valid staff-user-id`() {
         // given
-        val newShow = aNewShow()
+        val newShow = anAddShowReq()
 
         listOf(
             post("/shows")
@@ -117,10 +115,8 @@ class ShowsApiTest : ApiTest() {
 
         listOf(
             delete("/shows/$showId")
-                .contentType(APPLICATION_JSON)
                 .header(X_STAFF_USER_ID_HEADER, "not-valid-user-id"),
-            delete("/shows/$showId")
-                .contentType(APPLICATION_JSON),
+            delete("/shows/$showId"),
         ).forEach { invalidReq ->
             // when
             val response = mockMvc.perform(invalidReq).andReturn().response
@@ -171,7 +167,7 @@ class ShowsApiTest : ApiTest() {
                 .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
                 .content(
                     json.writeValueAsBytes(
-                        Requests.ShowUpdate(
+                        ShowsApi.UpdateShowReq(
                             startTime = updatedShow.startTime,
                             ticketPrice = Api.Money(updatedShow.ticketPrice)
                         )
@@ -188,7 +184,7 @@ class ShowsApiTest : ApiTest() {
     fun `should respond http 404 for unknown show update`() {
         // given
         val unknownShowId = ShowId(UUID.randomUUID())
-        val updateReq = Requests.ShowUpdate(
+        val updateReq = ShowsApi.UpdateShowReq(
             aFutureStartTime(),
             Api.Money(aTicketPrice())
         )
@@ -216,7 +212,7 @@ class ShowsApiTest : ApiTest() {
     fun `should secure update show endpoint and require valid staff-user-id`() {
         // given
         val showId = UUID.randomUUID()
-        val showUpdate = aShowUpdate()
+        val showUpdate = anUpdateShowReq()
 
         listOf(
             put("/shows/${showId}")
@@ -239,7 +235,7 @@ class ShowsApiTest : ApiTest() {
     fun should_respond_http400_for_invalid_data() {
         // given
         val staffUserId = aStaffUserId()
-        val newShow = Requests.NewShow(UUID.randomUUID(), Instant.now(), Api.Money(aTicketPrice()))
+        val addShowReq = ShowsApi.AddShowReq(UUID.randomUUID(), Instant.now(), Api.Money(aTicketPrice()))
 
         every { shows.addShow(any()) } returns Err(BadInput("some error"))
 
@@ -248,7 +244,7 @@ class ShowsApiTest : ApiTest() {
             post("/shows")
                 .contentType(APPLICATION_JSON)
                 .header(X_STAFF_USER_ID_HEADER, staffUserId.id)
-                .content(json.writeValueAsBytes(newShow))
+                .content(json.writeValueAsBytes(addShowReq))
         ).andReturn().response
 
         // then
@@ -256,9 +252,9 @@ class ShowsApiTest : ApiTest() {
         verify {
             shows.addShow(
                 ShowEntity(
-                    MovieId(newShow.movieId),
-                    newShow.startTime,
-                    newShow.ticketPrice.toMoney(),
+                    MovieId(addShowReq.movieId),
+                    addShowReq.startTime,
+                    addShowReq.ticketPrice.toMoney(),
                     staffUserId
                 )
             )

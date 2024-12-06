@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.test.assertEquals
 
 
-class MoviesMultiThreadedTest(
+class MovieRatingMultiThreadedTest(
     @Autowired val movies: Movies,
 ) : IntegrationTest() {
 
