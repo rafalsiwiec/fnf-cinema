@@ -46,8 +46,13 @@ abstract class BaseTest {
             movieId: UUID = UUID.randomUUID(),
             startTime: Instant = Instant.now().plus(1.days.toJavaDuration()),
             money: Money = Money(BigDecimal("35.00"), Currency.PLN),
-            id: UUID? = null
-        ) = ShowEntity(AggregateReference.to(movieId), startTime, money, id)
+            id: UUID? = null,
+        ) = ShowEntity(
+            movieId = AggregateReference.to(movieId),
+            startTime = startTime,
+            ticketPrice = money,
+            id = id
+        )
 
         fun anImdbMovie(): ImdbMovie = ImdbMovie(
             faker.movie.title(),

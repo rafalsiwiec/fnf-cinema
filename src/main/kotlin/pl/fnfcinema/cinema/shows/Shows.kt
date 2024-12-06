@@ -25,27 +25,25 @@ class Shows(
             return Err(Errors.BadInput("Show must not start in the past"))
         }
 
-        return when (newShow.movieId.id?.let { movies.findMovie(it) }) {
-            null -> Err(Errors.BadInput("Movie with id: ${newShow.movieId.id} does not exist"))
-            else -> Succ(showRepository.save(newShow))
-        }
+        newShow.movieId.id?.let { movies.findMovie(it) }
+            ?: return Err(Errors.BadInput("Movie with id: ${newShow.movieId.id} does not exist"))
+
+        return Succ(showRepository.save(newShow))
     }
 
-    fun deleteShow(showId: UUID): Res<Unit, ShowsError> =
-        showRepository.findByIdOrNull(showId)?.let {
-            showRepository.delete(it)
-            Succ(Unit)
-        } ?: Err(Errors.ShowNotFound(showId))
+    fun deleteShow(showId: UUID): Res<Unit, ShowsError> {
+        val show = showRepository.findByIdOrNull(showId) ?: return Err(Errors.ShowNotFound(showId))
+        showRepository.delete(show)
+        return Succ(Unit)
+    }
 
-    fun updateShow(showId: UUID, startTime: Instant, ticketPrice: Money): Res<ShowEntity, ShowsError> =
-        showRepository.findByIdOrNull(showId)?.let {
-            Succ(showRepository.save(it.copy(startTime = startTime, ticketPrice = ticketPrice)))
-        } ?: Err(Errors.ShowNotFound(showId))
+    fun updateShow(showId: UUID, startTime: Instant, ticketPrice: Money): Res<ShowEntity, ShowsError> {
+        val show = showRepository.findByIdOrNull(showId) ?: return Err(Errors.ShowNotFound(showId))
+        return Succ(showRepository.save(show.copy(startTime = startTime, ticketPrice = ticketPrice)))
+    }
 
     fun findNearest(movieId: UUID?, limit: Int): Res<List<ShowEntity>, ShowsError> {
-        if (limit < 1 || limit > 20) {
-            return Err(Errors.BadInput("Limit must be between 1 and 20"))
-        }
+        if (limit < 1 || limit > 20) return Err(Errors.BadInput("Limit must be between 1 and 20"))
 
         val now = Instant.now(clock)
 

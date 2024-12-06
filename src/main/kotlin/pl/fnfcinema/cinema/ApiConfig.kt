@@ -1,5 +1,6 @@
 package pl.fnfcinema.cinema
 
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -12,8 +13,12 @@ class ApiConfig {
     class ConflictErrorMapper {
 
         @ExceptionHandler(ConflictError::class)
-        fun handleConflictError(error: ConflictError): ResponseEntity<Unit> = ResponseEntity.status(CONFLICT).build()
+        fun handleConflictError(error: ConflictError): ResponseEntity<Unit> =
+            ResponseEntity.status(CONFLICT).build()
+
+        @ExceptionHandler(OptimisticLockingFailureException::class)
+        fun handleOptimisticLockingFailureException(error: OptimisticLockingFailureException): ResponseEntity<Unit> =
+            ResponseEntity.status(CONFLICT).build()
 
     }
-
 }
