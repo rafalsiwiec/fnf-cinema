@@ -11,6 +11,6 @@ data class Rating(val votes: Long, val total: Long) {
         else -> total.toBigDecimal().setScale(1).div(votes.toBigDecimal())
     }
 
-    fun record(rate: Int): Rating = copy(votes = votes + 1, total = total + rate)
+    fun record(rate: Rate): Rating = copy(votes = votes + 1, total = total + rate.value)
 
 }

@@ -9,7 +9,13 @@ import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.ApiTest
+import pl.fnfcinema.cinema.Err
+import pl.fnfcinema.cinema.OptimisticLocking
+import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
+import pl.fnfcinema.cinema.movies.Movies.Errors.MovieNotFound
 import pl.fnfcinema.cinema.movies.MoviesApi.Requests.NewMovie
 import pl.fnfcinema.cinema.movies.MoviesApi.Responses.BasicMovie
 import java.util.*
@@ -93,18 +99,20 @@ class MoviesApiTest(
     @Test
     fun `should rate movie`() {
         // given
-        val rate = faker.random.nextInt(1, 5)
+        val rate = aRate()
         val movieId = UUID.randomUUID()
         val movie = aMovie(id = movieId)
         val updatedMovie = movie.rate(rate)
 
-        every { movies.rate(any(), any()) } returns updatedMovie
+        every { movies.rate(any(), any()) } returns Succ(updatedMovie)
 
         // when
-        val response = mockMvc.perform(post("/movies/${movie.id}/rating/$rate")).andReturn().response
+        val response = mockMvc.perform(
+            post("/movies/${movie.id}/rating/${rate.value}")
+        ).andReturn().response
 
         // then
-        verify { movies.rate(movieId, rate) }
+        verify { movies.rate(movieId, rate.value) }
         assertEquals(200, response.status)
         assertEquals(
             BasicMovie(
@@ -122,7 +130,7 @@ class MoviesApiTest(
         // given
         val unknownMovieId = UUID.randomUUID()
 
-        every { movies.rate(any(), any()) } returns null
+        every { movies.rate(any(), any()) } returns Err(MovieNotFound(unknownMovieId))
 
         // when
         val response = mockMvc.perform(post("/movies/$unknownMovieId/rating/3")).andReturn().response
@@ -130,5 +138,43 @@ class MoviesApiTest(
         // then
         verify { movies.rate(unknownMovieId, 3) }
         assertEquals(404, response.status)
+        assertEquals(
+            Api.ErrorDetails("Movie with id: $unknownMovieId not found"),
+            json.parse(response)
+        )
+    }
+
+    @Test
+    fun `should respond http 400 when rating operation fails because of bad input`() {
+        // given
+        val movieId = UUID.randomUUID()
+
+        every { movies.rate(any(), any()) } returns Err(BadInput("Something went wrong"))
+
+        // when
+        val response = mockMvc.perform(post("/movies/$movieId/rating/3")).andReturn().response
+
+        // then
+        verify { movies.rate(movieId, 3) }
+        assertEquals(400, response.status)
+        assertEquals(
+            Api.ErrorDetails("Something went wrong"),
+            json.parse(response)
+        )
+    }
+
+    @Test
+    fun `should respond http 409 when rating operation throws conflict`() {
+        // given
+        val movieId = UUID.randomUUID()
+
+        every { movies.rate(any(), any()) } throws OptimisticLocking.ConflictError()
+
+        // when
+        val response = mockMvc.perform(post("/movies/$movieId/rating/3")).andReturn().response
+
+        // then
+        verify { movies.rate(movieId, 3) }
+        assertEquals(409, response.status)
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.mock.web.MockHttpServletResponse
 import pl.fnfcinema.cinema.integrations.imdb.ImdbInt
 import pl.fnfcinema.cinema.integrations.imdb.ImdbMovie
 import pl.fnfcinema.cinema.movies.MovieEntity
+import pl.fnfcinema.cinema.movies.Rate
 import pl.fnfcinema.cinema.movies.Rating
 import pl.fnfcinema.cinema.shows.ShowEntity
 import java.math.BigDecimal
@@ -34,6 +35,8 @@ abstract class BaseTest {
             id = id,
         )
 
+        fun aRate(): Rate = Rate(faker.random.nextInt(1, 5))
+
         fun aShow(
             movie: MovieEntity,
             startTime: Instant = Instant.now() + 1.days.toJavaDuration(),
@@ -58,7 +61,7 @@ abstract class BaseTest {
             "unknown"
         )
 
-        fun <R, E> Res<R, E>.get(): R = when (this) {
+        fun <R, E> Res<R, E>.requireSucc(): R = when (this) {
             is Succ<R> -> value
             is Err<E> -> throw IllegalStateException()
         }

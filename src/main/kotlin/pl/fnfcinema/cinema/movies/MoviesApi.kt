@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pl.fnfcinema.cinema.Api
+import pl.fnfcinema.cinema.Api.asErrorResponse
+import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Money
+import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.movies.Movies.Errors.MoviesError
 import pl.fnfcinema.cinema.movies.MoviesApi.Requests.NewMovie
 import pl.fnfcinema.cinema.movies.MoviesApi.Responses.BasicMovie
 import java.math.BigDecimal
@@ -38,8 +42,11 @@ class MoviesApi(private val movies: Movies) {
     fun rate(
         @PathVariable("id") id: UUID,
         @PathVariable("rate") rate: Int,
-    ): ResponseEntity<Responses.BasicMovie> =
-        Api.entityOrNotFound(movies.rate(id, rate)?.toBasicResponse())
+    ): ResponseEntity<BasicMovie> =
+        when (val result = movies.rate(id, rate)) {
+            is Succ<MovieEntity> -> ResponseEntity.ok(result.value.toBasicResponse())
+            is Err<MoviesError> -> result.asErrorResponse(::errorDetails)
+        }
 
     object Requests {
         data class NewMovie(val title: String, val imdbId: String, val defaultTicketPrice: Money)
@@ -79,5 +86,11 @@ class MoviesApi(private val movies: Movies) {
         )
 
         private fun NewMovie.toMovieEntity(): MovieEntity = MovieEntity(title, imdbId)
+
+        private fun errorDetails(moviesError: MoviesError): Pair<Int, String> =
+            when (moviesError) {
+                is Movies.Errors.BadInput -> 400 to moviesError.details
+                is Movies.Errors.MovieNotFound -> 404 to "Movie with id: ${moviesError.id} not found"
+            }
     }
 }

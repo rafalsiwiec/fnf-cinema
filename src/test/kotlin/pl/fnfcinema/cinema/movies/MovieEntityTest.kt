@@ -13,11 +13,11 @@ class MovieEntityTest : BaseTest() {
         val movie = aMovie(rating = rating)
 
         // when
-        val updatedMovie = movie.rate(1)
+        val updatedMovie = movie.rate(Rate(1))
 
         // then
         assertEquals(
-            movie.copy(rating = rating.record(1)),
+            movie.copy(rating = rating.record(Rate(1))),
             updatedMovie
         )
     }

@@ -4,8 +4,13 @@ import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.IntegrationTest
+import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
+import java.util.*
 import kotlin.test.assertEquals
 
 class MoviesTest(
@@ -78,30 +83,62 @@ class MoviesTest(
         val movie = movies.addMovie(aMovie())
 
         // when
-        val movieAfterFirstRate = movies.rate(movie.id!!, 5)
+        val movieAfterFirstRate = movies.rate(movie.id!!, 5).requireSucc()
 
         // then
         assertEquals(
             Rating(1, 5),
-            movieAfterFirstRate?.rating
+            movieAfterFirstRate.rating
         )
 
         // when
-        val movieAfterSecondRate = movies.rate(movie.id!!, 3)
+        val movieAfterSecondRate = movies.rate(movie.id!!, 3).requireSucc()
 
         // then
         assertEquals(
             Rating(2, 8),
-            movieAfterSecondRate?.rating
+            movieAfterSecondRate.rating
         )
 
         // when
-        val movieAfterThirdRate = movies.rate(movie.id!!, 4)
+        val movieAfterThirdRate = movies.rate(movie.id!!, 4).requireSucc()
 
         // then
         assertEquals(
             Rating(3, 12),
-            movieAfterThirdRate?.rating
+            movieAfterThirdRate.rating
+        )
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [-1, 0, 6, 10])
+    fun `should validate provided rate to be in allowed range`(invalidRateValue: Int) {
+        // given
+        val movieId = UUID.randomUUID()
+        movies.addMovie(aMovie(id = movieId))
+
+        // when
+        val result = movies.rate(movieId, invalidRateValue)
+
+        // then
+        assertEquals(
+            Err(BadInput("Invalid rate value")),
+            result
+        )
+    }
+
+    @Test
+    fun `should return error result on rating when movie does not exist`() {
+        // given
+        val unknownMovieId = UUID.randomUUID()
+
+        // when
+        val result = movies.rate(unknownMovieId, 3)
+
+        // then
+        assertEquals(
+            Err(Movies.Errors.MovieNotFound(unknownMovieId)),
+            result
         )
     }
 }

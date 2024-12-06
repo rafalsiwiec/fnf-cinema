@@ -16,7 +16,7 @@ data class MovieEntity(
     @Version val version: Int = 0,
     @Id val id: UUID? = null,
 ) {
-    fun rate(rate: Int) = copy(
+    fun rate(rate: Rate) = copy(
         rating = rating.record(rate)
     )
 }

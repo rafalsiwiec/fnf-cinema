@@ -140,9 +140,9 @@ class ShowsTest(
         val movieA = movies.addMovie(aMovie())
         val movieB = movies.addMovie(aMovie())
 
-        val movieATomorrowShow = shows.addShow(aShow(movie = movieA, startTime = time + 1.days.toJavaDuration())).get()
-        val movieANextWeekShow = shows.addShow(aShow(movie = movieA, startTime = time + 7.days.toJavaDuration())).get()
-        val movieBDayAfterTomorrowShow = shows.addShow(aShow(movie = movieB, startTime = time + 2.days.toJavaDuration())).get()
-        val movieBNextWeekShow = shows.addShow(aShow(movie = movieB, startTime = time + 8.days.toJavaDuration())).get()
+        val movieATomorrowShow = shows.addShow(aShow(movie = movieA, startTime = time + 1.days.toJavaDuration())).requireSucc()
+        val movieANextWeekShow = shows.addShow(aShow(movie = movieA, startTime = time + 7.days.toJavaDuration())).requireSucc()
+        val movieBDayAfterTomorrowShow = shows.addShow(aShow(movie = movieB, startTime = time + 2.days.toJavaDuration())).requireSucc()
+        val movieBNextWeekShow = shows.addShow(aShow(movie = movieB, startTime = time + 8.days.toJavaDuration())).requireSucc()
     }
 }

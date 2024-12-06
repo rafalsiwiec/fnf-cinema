@@ -22,5 +22,5 @@ object OptimisticLocking {
         throw ConflictError(latestError)
     }
 
-    class ConflictError(cause: OptimisticLockingFailureException?) : RuntimeException(cause)
+    class ConflictError(cause: OptimisticLockingFailureException? = null) : RuntimeException(cause)
 }
