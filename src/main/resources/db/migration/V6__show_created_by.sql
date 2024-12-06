@@ -1,0 +1,1 @@
+ALTER TABLE show ADD COLUMN created_by UUID NOT NULL;

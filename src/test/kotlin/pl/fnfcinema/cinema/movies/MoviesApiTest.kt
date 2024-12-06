@@ -7,13 +7,14 @@ import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import pl.fnfcinema.cinema.Api
+import pl.fnfcinema.cinema.Api.Security.X_STAFF_USER_ID_HEADER
 import pl.fnfcinema.cinema.ApiTest
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.OptimisticLocking
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.aMovie
 import pl.fnfcinema.cinema.aRate
-import pl.fnfcinema.cinema.aTicketPrice
+import pl.fnfcinema.cinema.aStaffUserId
 import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
 import pl.fnfcinema.cinema.movies.Movies.Errors.MovieNotFound
 import pl.fnfcinema.cinema.movies.MoviesApi.Requests.NewMovie
@@ -26,7 +27,7 @@ class MoviesApiTest : ApiTest() {
     @Test
     fun should_add_movie() {
         // given
-        val newMovieReq = NewMovie("some title", "tt0000006", aTicketPrice())
+        val newMovieReq = NewMovie("some title", "tt0000006")
         val newMovie = MovieEntity(newMovieReq.title, newMovieReq.imdbId)
         val newMovieId = UUID.randomUUID()
         val savedMovie = newMovie.copy(id = newMovieId)
@@ -37,6 +38,7 @@ class MoviesApiTest : ApiTest() {
         val response = mockMvc.perform(
             post("/movies")
                 .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
                 .content(json.writeValueAsBytes(newMovieReq))
         ).andReturn().response
 
@@ -46,6 +48,26 @@ class MoviesApiTest : ApiTest() {
         assertEquals(201, response.status)
         val responseBody = json.readValue(response.contentAsByteArray, BasicMovie::class.java)
         assertEquals(BasicMovie(newMovieId, savedMovie.title), responseBody)
+    }
+
+    @Test
+    fun `should secure create movie endpoint and require valid staff-user-id`() {
+        // given
+        val newMovie = NewMovie("some title", "tt0000006")
+        listOf(
+            post("/movies")
+                .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, "invalid-staff-user-id")
+                .content(json.writeValueAsBytes(newMovie)),
+            post("/movies")
+                .contentType(APPLICATION_JSON)
+                .content(json.writeValueAsBytes(newMovie)),
+        ).forEach { invalidReq ->
+            // when
+            val response = mockMvc.perform(invalidReq).andReturn().response
+            // then
+            assertEquals(403, response.status)
+        }
     }
 
     @Test

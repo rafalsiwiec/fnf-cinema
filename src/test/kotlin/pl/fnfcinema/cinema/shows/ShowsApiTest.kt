@@ -9,11 +9,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delet
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import pl.fnfcinema.cinema.Api
+import pl.fnfcinema.cinema.Api.Security.X_STAFF_USER_ID_HEADER
 import pl.fnfcinema.cinema.ApiTest
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.aNewShow
 import pl.fnfcinema.cinema.aShow
+import pl.fnfcinema.cinema.aShowUpdate
+import pl.fnfcinema.cinema.aStaffUserId
 import pl.fnfcinema.cinema.aTicketPrice
 import pl.fnfcinema.cinema.shows.Shows.Errors.BadInput
 import pl.fnfcinema.cinema.shows.Shows.Errors.ShowNotFound
@@ -30,6 +34,7 @@ class ShowsApiTest : ApiTest() {
     @Test
     fun should_add_new_show() {
         // given
+        val staffUserId = aStaffUserId()
         val newShow = Requests.NewShow(
             movieId = UUID.randomUUID(),
             startTime = Instant.now(),
@@ -37,9 +42,10 @@ class ShowsApiTest : ApiTest() {
         )
 
         val newShowEntity = ShowEntity(
-            AggregateReference.to(newShow.movieId),
-            newShow.startTime,
-            Money(20.00.toBigDecimal())
+            movieId = AggregateReference.to(newShow.movieId),
+            startTime = newShow.startTime,
+            ticketPrice = Money(20.00.toBigDecimal()),
+            createdBy = staffUserId
         )
 
         val createdShowEntityId = UUID.randomUUID()
@@ -49,6 +55,7 @@ class ShowsApiTest : ApiTest() {
         val response = mockMvc.perform(
             post("/shows")
                 .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, staffUserId.id)
                 .content(json.writeValueAsBytes(newShow))
         ).andReturn().response
 
@@ -64,6 +71,28 @@ class ShowsApiTest : ApiTest() {
     }
 
     @Test
+    fun `should secure add show endpoint and require valid staff-user-id`() {
+        // given
+        val newShow = aNewShow()
+
+        listOf(
+            post("/shows")
+                .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, "not-valid-user-id")
+                .content(json.writeValueAsBytes(newShow)),
+            post("/shows")
+                .contentType(APPLICATION_JSON)
+                .content(json.writeValueAsBytes(newShow)),
+        ).forEach { invalidReq ->
+            // when
+            val response = mockMvc.perform(invalidReq).andReturn().response
+
+            // then
+            assertEquals(403, response.status)
+        }
+    }
+
+    @Test
     fun `should delete show`() {
         // given
         val showId = UUID.randomUUID()
@@ -71,11 +100,34 @@ class ShowsApiTest : ApiTest() {
         every { shows.deleteShow(any()) } returns Succ(Unit)
 
         // when
-        val response = mockMvc.perform(delete("/shows/${showId}")).andReturn().response
+        val response = mockMvc.perform(
+            delete("/shows/${showId}")
+                .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
+        ).andReturn().response
 
         // then
         verify { shows.deleteShow(showId) }
         assertEquals(response.status, 204)
+    }
+
+    @Test
+    fun `should secure delete show endpoint and require valid staff-user-id`() {
+        // given
+        val showId = UUID.randomUUID()
+
+        listOf(
+            delete("/shows/$showId")
+                .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, "not-valid-user-id"),
+            delete("/shows/$showId")
+                .contentType(APPLICATION_JSON),
+        ).forEach { invalidReq ->
+            // when
+            val response = mockMvc.perform(invalidReq).andReturn().response
+
+            // then
+            assertEquals(403, response.status)
+        }
     }
 
     @Test
@@ -86,7 +138,10 @@ class ShowsApiTest : ApiTest() {
         every { shows.deleteShow(any()) } returns Err(ShowNotFound(unknownShowId))
 
         // when
-        val response = mockMvc.perform(delete("/shows/$unknownShowId")).andReturn().response
+        val response = mockMvc.perform(
+            delete("/shows/$unknownShowId")
+                .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
+        ).andReturn().response
 
         // then
         verify { shows.deleteShow(unknownShowId) }
@@ -112,6 +167,7 @@ class ShowsApiTest : ApiTest() {
         val response = mockMvc.perform(
             put("/shows/${show.id}")
                 .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
                 .content(
                     json.writeValueAsBytes(
                         Requests.ShowUpdate(
@@ -141,6 +197,7 @@ class ShowsApiTest : ApiTest() {
         val response = mockMvc.perform(
             put("/shows/${unknownShowId}")
                 .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
                 .content(json.writeValueAsBytes(updateReq))
         ).andReturn().response
 
@@ -155,8 +212,32 @@ class ShowsApiTest : ApiTest() {
     }
 
     @Test
+    fun `should secure update show endpoint and require valid staff-user-id`() {
+        // given
+        val showId = UUID.randomUUID()
+        val showUpdate = aShowUpdate()
+
+        listOf(
+            put("/shows/${showId}")
+                .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, "invalid-staff-user-id")
+                .content(json.writeValueAsBytes(showUpdate)),
+            put("/shows/${showId}")
+                .contentType(APPLICATION_JSON)
+                .content(json.writeValueAsBytes(showUpdate)),
+        ).forEach { invalidReq ->
+            // when
+            val response = mockMvc.perform(invalidReq).andReturn().response
+
+            // then
+            assertEquals(403, response.status)
+        }
+    }
+
+    @Test
     fun should_respond_http400_for_invalid_data() {
         // given
+        val staffUserId = aStaffUserId()
         val newShow = Requests.NewShow(UUID.randomUUID(), Instant.now(), Api.Money(aTicketPrice()))
 
         every { shows.addShow(any()) } returns Err(BadInput("some error"))
@@ -165,6 +246,7 @@ class ShowsApiTest : ApiTest() {
         val response = mockMvc.perform(
             post("/shows")
                 .contentType(APPLICATION_JSON)
+                .header(X_STAFF_USER_ID_HEADER, staffUserId.id)
                 .content(json.writeValueAsBytes(newShow))
         ).andReturn().response
 
@@ -175,7 +257,8 @@ class ShowsApiTest : ApiTest() {
                 ShowEntity(
                     AggregateReference.to(newShow.movieId),
                     newShow.startTime,
-                    newShow.ticketPrice.toMoney()
+                    newShow.ticketPrice.toMoney(),
+                    staffUserId
                 )
             )
         }

@@ -12,4 +12,6 @@ class DatabaseConfig {
     @ServiceConnection
     fun database(): PostgreSQLContainer<*> = PostgreSQLContainer("postgres:17-alpine")
 
+    
+
 }

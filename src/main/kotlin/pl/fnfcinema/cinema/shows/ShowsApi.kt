@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.Api.asErrorResponse
+import pl.fnfcinema.cinema.StaffUserId
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.shows.Shows.Errors.ShowsError
@@ -26,30 +27,36 @@ class ShowsApi(
 ) {
 
     @PostMapping
-    fun addShow(@RequestBody newShow: Requests.NewShow): ResponseEntity<Responses.Show> =
-        when (val result = shows.addShow(newShow.toEntity())) {
+    fun addShow(@RequestBody newShow: Requests.NewShow): ResponseEntity<Responses.Show> {
+        val staffUserId = Api.Security.requireStaffUserId()
+        return when (val result = shows.addShow(newShow.toEntity(staffUserId))) {
             is Succ<ShowEntity> -> ResponseEntity.status(201).body(result.value.toShow())
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
+    }
 
     @PutMapping("/{id}")
     fun updateShow(
         @PathVariable("id") id: UUID,
         @RequestBody showUpdate: Requests.ShowUpdate,
     ): ResponseEntity<Responses.Show> {
+        Api.Security.requireStaffUserId()
         val (startTime, ticketPrice) = showUpdate
-        return when (val result = shows.updateShow(showId = id, startTime = startTime, ticketPrice = ticketPrice.toMoney())) {
+        return when (val result =
+            shows.updateShow(showId = id, startTime = startTime, ticketPrice = ticketPrice.toMoney())) {
             is Succ<ShowEntity> -> ResponseEntity.ok(result.value.toShow())
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
     }
 
     @DeleteMapping("/{id}")
-    fun deleteShow(@PathVariable("id") id: UUID): ResponseEntity<Unit> =
-        when (val result = shows.deleteShow(showId = id)) {
+    fun deleteShow(@PathVariable("id") id: UUID): ResponseEntity<Unit> {
+        Api.Security.requireStaffUserId()
+        return when (val result = shows.deleteShow(showId = id)) {
             is Succ<Unit> -> ResponseEntity.noContent().build()
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
+    }
 
     @GetMapping
     fun findNearestShows(
@@ -71,11 +78,12 @@ class ShowsApi(
     }
 
     companion object {
-        private fun Requests.NewShow.toEntity() =
+        private fun Requests.NewShow.toEntity(staffUserId: StaffUserId) =
             ShowEntity(
-                AggregateReference.to(this.movieId),
-                startTime,
-                ticketPrice.toMoney()
+                movieId = AggregateReference.to(this.movieId),
+                startTime = startTime,
+                ticketPrice = ticketPrice.toMoney(),
+                createdBy = staffUserId,
             )
 
         private fun ShowEntity.toShow() =

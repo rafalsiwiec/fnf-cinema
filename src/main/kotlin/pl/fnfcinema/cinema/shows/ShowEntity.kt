@@ -6,6 +6,7 @@ import org.springframework.data.jdbc.core.mapping.AggregateReference
 import org.springframework.data.relational.core.mapping.Embedded
 import org.springframework.data.relational.core.mapping.Embedded.OnEmpty.USE_EMPTY
 import org.springframework.data.relational.core.mapping.Table
+import pl.fnfcinema.cinema.StaffUserId
 import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.movies.MovieEntity
 import java.time.Instant
@@ -17,6 +18,7 @@ data class ShowEntity(
     val startTime: Instant,
     @Embedded(onEmpty = USE_EMPTY)
     val ticketPrice: Money,
+    val createdBy: StaffUserId,
     @Version val version: Int = 0,
     @Id val id: UUID? = null,
 )

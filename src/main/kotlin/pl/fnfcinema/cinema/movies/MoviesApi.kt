@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController
 import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.Api.asErrorResponse
 import pl.fnfcinema.cinema.Err
-import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.movies.Movies.Errors.MoviesError
 import pl.fnfcinema.cinema.movies.MoviesApi.Requests.NewMovie
@@ -30,6 +29,7 @@ class MoviesApi(private val movies: Movies) {
 
     @PostMapping
     fun addMovie(@RequestBody newMovie: NewMovie): ResponseEntity<BasicMovie> {
+        Api.Security.requireStaffUserId()
         val movie = movies.addMovie(newMovie.toMovieEntity()).toBasicResponse()
         return ResponseEntity.status(201).body(movie)
     }
@@ -49,7 +49,7 @@ class MoviesApi(private val movies: Movies) {
         }
 
     object Requests {
-        data class NewMovie(val title: String, val imdbId: String, val defaultTicketPrice: Money)
+        data class NewMovie(val title: String, val imdbId: String)
     }
 
     object Responses {
