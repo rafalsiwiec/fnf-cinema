@@ -2,11 +2,11 @@ package pl.fnfcinema.cinema.shows
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import pl.fnfcinema.cinema.Error
+import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.IntegrationTest
-import pl.fnfcinema.cinema.Success
+import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.movies.Movies
-import pl.fnfcinema.cinema.shows.Shows.Errors.InvalidData
+import pl.fnfcinema.cinema.shows.Shows.Errors.BadInput
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
@@ -31,7 +31,7 @@ class ShowsTest(
 
         // then
         assertEquals(
-            Success(
+            Succ(
                 listOf(
                     fixtures.movieATomorrowShow,
                     fixtures.movieBDayAfterTomorrowShow,
@@ -54,7 +54,7 @@ class ShowsTest(
 
         // then
         assertEquals(
-            Success(
+            Succ(
                 listOf(
                     fixtures.movieATomorrowShow,
                     fixtures.movieBDayAfterTomorrowShow,
@@ -76,7 +76,7 @@ class ShowsTest(
 
         // then
         assertEquals(
-            Success(
+            Succ(
                 listOf(
                     fixtures.movieATomorrowShow,
                     fixtures.movieANextWeekShow,
@@ -93,7 +93,7 @@ class ShowsTest(
 
         // then
         assertEquals(
-            Success(
+            Succ(
                 listOf(
                     fixtures.movieBDayAfterTomorrowShow,
                     fixtures.movieANextWeekShow,
@@ -115,7 +115,7 @@ class ShowsTest(
 
         // then
         assertEquals(
-            Error(InvalidData("Movie with id: $unknownMovieId does not exist")),
+            Err(BadInput("Movie with id: $unknownMovieId does not exist")),
             result
         )
     }
@@ -131,7 +131,7 @@ class ShowsTest(
 
         // then
         assertEquals(
-            Error(InvalidData("Show must not start in the past")),
+            Err(BadInput("Show must not start in the past")),
             result
         )
     }
@@ -142,8 +142,7 @@ class ShowsTest(
 
         val movieATomorrowShow = shows.addShow(aShow(movie = movieA, startTime = time + 1.days.toJavaDuration())).get()
         val movieANextWeekShow = shows.addShow(aShow(movie = movieA, startTime = time + 7.days.toJavaDuration())).get()
-        val movieBDayAfterTomorrowShow =
-            shows.addShow(aShow(movie = movieB, startTime = time + 2.days.toJavaDuration())).get()
+        val movieBDayAfterTomorrowShow = shows.addShow(aShow(movie = movieB, startTime = time + 2.days.toJavaDuration())).get()
         val movieBNextWeekShow = shows.addShow(aShow(movie = movieB, startTime = time + 8.days.toJavaDuration())).get()
     }
 }

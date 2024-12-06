@@ -1,7 +1,9 @@
 package pl.fnfcinema.cinema
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.serpro69.kfaker.Faker
 import org.springframework.data.jdbc.core.mapping.AggregateReference
+import org.springframework.mock.web.MockHttpServletResponse
 import pl.fnfcinema.cinema.integrations.imdb.ImdbInt
 import pl.fnfcinema.cinema.integrations.imdb.ImdbMovie
 import pl.fnfcinema.cinema.movies.MovieEntity
@@ -18,9 +20,9 @@ abstract class BaseTest {
 
     companion object {
 
-        val faker = Faker()
+        private val faker = Faker()
 
-        fun aMoney(): Money = Money(faker.random.nextInt(20, 45).toBigDecimal().setScale(2))
+        fun aTicketPrice(): Money = Money(faker.random.nextInt(20, 45).toBigDecimal().setScale(2))
 
         fun anImdbId(): String = faker.string.numerify("tt#######")
 
@@ -39,7 +41,8 @@ abstract class BaseTest {
             movieId: UUID = UUID.randomUUID(),
             startTime: Instant = Instant.now().plus(1.days.toJavaDuration()),
             money: Money = Money(BigDecimal("35.00"), Currency.getInstance("PLN")),
-        ) = ShowEntity(AggregateReference.to(movieId), startTime, money)
+            id: UUID? = null
+        ) = ShowEntity(AggregateReference.to(movieId), startTime, money, id)
 
         fun anImdbMovie(): ImdbMovie = ImdbMovie(
             faker.movie.title(),
@@ -53,10 +56,14 @@ abstract class BaseTest {
             "unknown"
         )
 
-        fun <R, E> Result<R, E>.get(): R = when (this) {
-            is Success<R> -> value
-            is Error<E> -> throw IllegalStateException()
+        fun <R, E> Res<R, E>.get(): R = when (this) {
+            is Succ<R> -> value
+            is Err<E> -> throw IllegalStateException()
         }
+
+        inline fun <reified T> ObjectMapper.parse(resp: MockHttpServletResponse): T =
+            readValue(resp.contentAsByteArray, T::class.java)
+
     }
 
 }

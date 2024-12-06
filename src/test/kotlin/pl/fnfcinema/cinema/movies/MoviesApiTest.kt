@@ -23,7 +23,7 @@ class MoviesApiTest(
     @Test
     fun should_add_movie() {
         // given
-        val newMovieReq = NewMovie("some title", "tt0000006", aMoney())
+        val newMovieReq = NewMovie("some title", "tt0000006", aTicketPrice())
         val newMovie = MovieEntity(newMovieReq.title, newMovieReq.imdbId)
         val newMovieId = UUID.randomUUID()
         val savedMovie = newMovie.copy(id = newMovieId)
