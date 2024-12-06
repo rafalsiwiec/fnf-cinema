@@ -1,5 +1,8 @@
 package pl.fnfcinema.cinema.movies
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -8,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pl.fnfcinema.cinema.Api
+import pl.fnfcinema.cinema.Api.Security.STAFF_ONLY
 import pl.fnfcinema.cinema.Api.asErrorResponse
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Succ
@@ -18,25 +22,31 @@ import java.net.URI
 import java.time.LocalDate
 import java.util.*
 
+
+@Tag(
+    name = "Movies API",
+    description = "Manages movies"
+)
 @RestController
 @RequestMapping("/movies")
 class MoviesApi(private val movies: Movies) {
 
-    @GetMapping
+    @GetMapping(produces = [APPLICATION_JSON_VALUE])
     fun getAllMovies(): List<Responses.BasicMovie> = movies.getAll().map { it.toBasicResponse() }
 
-    @PostMapping
+    @SecurityRequirement(name = STAFF_ONLY)
+    @PostMapping(consumes = [APPLICATION_JSON_VALUE], produces = [APPLICATION_JSON_VALUE])
     fun addMovie(@RequestBody newMovie: NewMovie): ResponseEntity<Responses.BasicMovie> {
         Api.Security.requireStaffUserId()
         val movie = movies.addMovie(newMovie.toMovieEntity()).toBasicResponse()
         return ResponseEntity.status(201).body(movie)
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     fun getMovie(@PathVariable("id") id: UUID): ResponseEntity<Responses.Movie> =
         Api.entityOrNotFound(movies.getMovieDetails(MovieId(id))?.toResponse(id))
 
-    @PostMapping("/{id}/rating/{rate}")
+    @PostMapping("/{id}/rating/{rate}", consumes = [APPLICATION_JSON_VALUE], produces = [APPLICATION_JSON_VALUE])
     fun rate(
         @PathVariable("id") id: UUID,
         @PathVariable("rate") rate: Int,
