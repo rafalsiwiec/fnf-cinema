@@ -27,7 +27,7 @@ class ShowsTest(
     fun should_return_nearest_shows_for_limit_larger_than_actual_shows() {
         // given
         val time = mutableClock.stopTime()
-        val fixtures = Fixtures(movies, shows, time)
+        val data = Data(movies, shows, time)
 
         // when
         val nearestAtMax10Shows = shows.findNearest(null, 10)
@@ -36,10 +36,10 @@ class ShowsTest(
         assertEquals(
             Succ(
                 listOf(
-                    fixtures.movieATomorrowShow,
-                    fixtures.movieBDayAfterTomorrowShow,
-                    fixtures.movieANextWeekShow,
-                    fixtures.movieBNextWeekShow
+                    data.movieATomorrowShow,
+                    data.movieBDayAfterTomorrowShow,
+                    data.movieANextWeekShow,
+                    data.movieBNextWeekShow
                 )
             ),
             nearestAtMax10Shows
@@ -50,7 +50,7 @@ class ShowsTest(
     fun should_return_nearest_shows_for_limit_smaller_than_actual_shows() {
         // given
         val time = mutableClock.stopTime()
-        val fixtures = Fixtures(movies, shows, time)
+        val data = Data(movies, shows, time)
 
         // when
         val nearestAtMax3Shows = shows.findNearest(null, 3)
@@ -59,9 +59,9 @@ class ShowsTest(
         assertEquals(
             Succ(
                 listOf(
-                    fixtures.movieATomorrowShow,
-                    fixtures.movieBDayAfterTomorrowShow,
-                    fixtures.movieANextWeekShow
+                    data.movieATomorrowShow,
+                    data.movieBDayAfterTomorrowShow,
+                    data.movieANextWeekShow
                 )
             ),
             nearestAtMax3Shows
@@ -72,17 +72,17 @@ class ShowsTest(
     fun should_filter_out_past_shows() {
         // given
         val time = mutableClock.stopTime()
-        val fixtures = Fixtures(movies, shows, time)
+        val data = Data(movies, shows, time)
 
         // when
-        val nearestAtMax10MovieAShows = shows.findNearest(fixtures.movieA.id, 10)
+        val nearestAtMax10MovieAShows = shows.findNearest(data.movieA.id, 10)
 
         // then
         assertEquals(
             Succ(
                 listOf(
-                    fixtures.movieATomorrowShow,
-                    fixtures.movieANextWeekShow,
+                    data.movieATomorrowShow,
+                    data.movieANextWeekShow,
                 )
             ),
             nearestAtMax10MovieAShows
@@ -98,9 +98,9 @@ class ShowsTest(
         assertEquals(
             Succ(
                 listOf(
-                    fixtures.movieBDayAfterTomorrowShow,
-                    fixtures.movieANextWeekShow,
-                    fixtures.movieBNextWeekShow
+                    data.movieBDayAfterTomorrowShow,
+                    data.movieANextWeekShow,
+                    data.movieBNextWeekShow
                 )
             ),
             nearestAtMax10ShowsFetched26hLater
@@ -139,7 +139,7 @@ class ShowsTest(
         )
     }
 
-    private class Fixtures(movies: Movies, shows: Shows, time: Instant) {
+    private class Data(movies: Movies, shows: Shows, time: Instant) {
         val movieA = movies.addMovie(aMovie())
         val movieB = movies.addMovie(aMovie())
 

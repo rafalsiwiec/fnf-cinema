@@ -3,10 +3,8 @@ package pl.fnfcinema.cinema.shows
 import io.mockk.every
 import io.mockk.verify
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.jdbc.core.mapping.AggregateReference
 import org.springframework.http.MediaType.APPLICATION_JSON
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
@@ -27,9 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toJavaDuration
 
-class ShowsApiTest(
-    @Autowired val mockMvc: MockMvc,
-) : ApiTest() {
+class ShowsApiTest : ApiTest() {
 
     @Test
     fun should_add_new_show() {
@@ -52,7 +48,7 @@ class ShowsApiTest(
         // when
         val response = mockMvc.perform(
             post("/shows")
-                .header("content-type", "application/json")
+                .contentType(APPLICATION_JSON)
                 .content(json.writeValueAsBytes(newShow))
         ).andReturn().response
 
@@ -115,7 +111,7 @@ class ShowsApiTest(
         // when
         val response = mockMvc.perform(
             put("/shows/${show.id}")
-                .header("content-type", "application/json")
+                .contentType(APPLICATION_JSON)
                 .content(
                     json.writeValueAsBytes(
                         Requests.ShowUpdate(
@@ -168,7 +164,7 @@ class ShowsApiTest(
         // when
         val response = mockMvc.perform(
             post("/shows")
-                .header("content-type", "application/json")
+                .contentType(APPLICATION_JSON)
                 .content(json.writeValueAsBytes(newShow))
         ).andReturn().response
 

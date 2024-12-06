@@ -1,12 +1,9 @@
 package pl.fnfcinema.cinema.movies
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.verify
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType.APPLICATION_JSON
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import pl.fnfcinema.cinema.Api
@@ -24,9 +21,7 @@ import pl.fnfcinema.cinema.movies.MoviesApi.Responses.BasicMovie
 import java.util.*
 import kotlin.test.assertEquals
 
-class MoviesApiTest(
-    @Autowired val mockMvc: MockMvc,
-) : ApiTest() {
+class MoviesApiTest : ApiTest() {
 
     @Test
     fun should_add_movie() {
