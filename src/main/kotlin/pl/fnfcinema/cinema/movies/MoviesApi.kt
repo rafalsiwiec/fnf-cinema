@@ -34,12 +34,19 @@ class MoviesApi(private val movies: Movies) {
     fun getMovie(@PathVariable("id") id: UUID): ResponseEntity<Responses.Movie> =
         Api.entityOrNotFound(movies.getMovieDetails(id)?.toResponse(id))
 
+    @PostMapping("/{id}/rating/{rate}")
+    fun rate(
+        @PathVariable("id") id: UUID,
+        @PathVariable("rate") rate: Int,
+    ): ResponseEntity<Responses.BasicMovie> =
+        Api.entityOrNotFound(movies.rate(id, rate)?.toBasicResponse())
+
     object Requests {
         data class NewMovie(val title: String, val imdbId: String, val defaultTicketPrice: Money)
     }
 
     object Responses {
-        data class BasicMovie(val id: UUID, val title: String)
+        data class BasicMovie(val id: UUID, val title: String, val votes: Long = 0, val avgRate: BigDecimal? = null)
         data class Movie(
             val id: UUID,
             val title: String,
@@ -56,7 +63,7 @@ class MoviesApi(private val movies: Movies) {
     }
 
     companion object {
-        private fun MovieEntity.toBasicResponse(): BasicMovie = BasicMovie(id!!, title)
+        private fun MovieEntity.toBasicResponse(): BasicMovie = BasicMovie(id!!, title, rating.votes, rating.avg())
         private fun MovieDetails.toResponse(id: UUID): Responses.Movie = Responses.Movie(
             id,
             title,
@@ -70,6 +77,7 @@ class MoviesApi(private val movies: Movies) {
             posterUrl,
             awards
         )
+
         private fun NewMovie.toMovieEntity(): MovieEntity = MovieEntity(title, imdbId)
     }
 }

@@ -71,4 +71,37 @@ class MoviesTest(
         // no additional call to imdbApi was performed
         confirmVerified(imdbApi)
     }
+
+    @Test
+    fun `should rate movie`() {
+        // given
+        val movie = movies.addMovie(aMovie())
+
+        // when
+        val movieAfterFirstRate = movies.rate(movie.id!!, 5)
+
+        // then
+        assertEquals(
+            Rating(1, 5),
+            movieAfterFirstRate?.rating
+        )
+
+        // when
+        val movieAfterSecondRate = movies.rate(movie.id!!, 3)
+
+        // then
+        assertEquals(
+            Rating(2, 8),
+            movieAfterSecondRate?.rating
+        )
+
+        // when
+        val movieAfterThirdRate = movies.rate(movie.id!!, 4)
+
+        // then
+        assertEquals(
+            Rating(3, 12),
+            movieAfterThirdRate?.rating
+        )
+    }
 }

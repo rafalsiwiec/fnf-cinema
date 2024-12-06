@@ -1,6 +1,9 @@
 package pl.fnfcinema.cinema.movies
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.annotation.Version
+import org.springframework.data.relational.core.mapping.Embedded
+import org.springframework.data.relational.core.mapping.Embedded.OnEmpty.USE_EMPTY
 import org.springframework.data.relational.core.mapping.Table
 import java.util.*
 
@@ -8,5 +11,12 @@ import java.util.*
 data class MovieEntity(
     val title: String,
     val imdbId: String,
-    @Id val id: UUID? = null
-)
+    @Embedded(onEmpty = USE_EMPTY, prefix = "rating_")
+    val rating: Rating = Rating(),
+    @Version val version: Int = 0,
+    @Id val id: UUID? = null,
+) {
+    fun rate(rate: Int) = copy(
+        rating = rating.record(rate)
+    )
+}

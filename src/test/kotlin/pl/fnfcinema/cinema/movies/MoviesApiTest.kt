@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 
 class MoviesApiTest(
     @Autowired val mockMvc: MockMvc,
-    @Autowired val objectMapper: ObjectMapper,
+    @Autowired val json: ObjectMapper,
 ) : ApiTest() {
 
     @Test
@@ -34,22 +34,22 @@ class MoviesApiTest(
         val response = mockMvc.perform(
             post("/movies")
                 .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(newMovieReq))
+                .content(json.writeValueAsBytes(newMovieReq))
         ).andReturn().response
 
         // then
         verify { movies.addMovie(newMovie) }
 
         assertEquals(201, response.status)
-        val responseBody = objectMapper.readValue(response.contentAsByteArray, BasicMovie::class.java)
+        val responseBody = json.readValue(response.contentAsByteArray, BasicMovie::class.java)
         assertEquals(BasicMovie(newMovieId, savedMovie.title), responseBody)
     }
 
     @Test
     fun should_search_movies() {
         // given
-        val firstMovie = MovieEntity("some-title-1", "tt0000001", UUID.randomUUID())
-        val secondMovie = MovieEntity("some-title-2", "tt0000002", UUID.randomUUID())
+        val firstMovie = aMovie(id = UUID.randomUUID())
+        val secondMovie = aMovie(id = UUID.randomUUID())
 
         every { movies.getAll() } returns listOf(firstMovie, secondMovie)
 
@@ -59,7 +59,7 @@ class MoviesApiTest(
         // then
         assertEquals(200, response.status)
         assertEquals("application/json", response.getHeader("content-type"))
-        val foundMovies = objectMapper.readerFor(BasicMovie::class.java)
+        val foundMovies = json.readerFor(BasicMovie::class.java)
             .readValues<BasicMovie>(response.contentAsByteArray)
             .readAll()
         assertEquals(2, foundMovies.size)
@@ -88,5 +88,47 @@ class MoviesApiTest(
         assertEquals(404, response.status)
 
         verify { movies.getMovieDetails(id) }
+    }
+
+    @Test
+    fun `should rate movie`() {
+        // given
+        val rate = faker.random.nextInt(1, 5)
+        val movieId = UUID.randomUUID()
+        val movie = aMovie(id = movieId)
+        val updatedMovie = movie.rate(rate)
+
+        every { movies.rate(any(), any()) } returns updatedMovie
+
+        // when
+        val response = mockMvc.perform(post("/movies/${movie.id}/rating/$rate")).andReturn().response
+
+        // then
+        verify { movies.rate(movieId, rate) }
+        assertEquals(200, response.status)
+        assertEquals(
+            BasicMovie(
+                id = movieId,
+                title = movie.title,
+                votes = updatedMovie.rating.votes,
+                avgRate = updatedMovie.rating.avg()
+            ),
+            json.parse(response)
+        )
+    }
+
+    @Test
+    fun `should respond http 404 when rated movie does not exist`() {
+        // given
+        val unknownMovieId = UUID.randomUUID()
+
+        every { movies.rate(any(), any()) } returns null
+
+        // when
+        val response = mockMvc.perform(post("/movies/$unknownMovieId/rating/3")).andReturn().response
+
+        // then
+        verify { movies.rate(unknownMovieId, 3) }
+        assertEquals(404, response.status)
     }
 }

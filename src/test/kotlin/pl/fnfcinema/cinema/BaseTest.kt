@@ -7,6 +7,7 @@ import org.springframework.mock.web.MockHttpServletResponse
 import pl.fnfcinema.cinema.integrations.imdb.ImdbInt
 import pl.fnfcinema.cinema.integrations.imdb.ImdbMovie
 import pl.fnfcinema.cinema.movies.MovieEntity
+import pl.fnfcinema.cinema.movies.Rating
 import pl.fnfcinema.cinema.shows.ShowEntity
 import java.math.BigDecimal
 import java.net.URI
@@ -20,16 +21,17 @@ abstract class BaseTest {
 
     companion object {
 
-        private val faker = Faker()
+        val faker = Faker()
 
         fun aTicketPrice(): Money = Money(faker.random.nextInt(20, 45).toBigDecimal().setScale(2))
 
         fun anImdbId(): String = faker.string.numerify("tt#######")
 
-        fun aMovie(id: UUID? = null) = MovieEntity(
-            faker.movie.title(),
-            anImdbId(),
-            id
+        fun aMovie(rating: Rating = Rating(), id: UUID? = null) = MovieEntity(
+            title = faker.movie.title(),
+            imdbId = anImdbId(),
+            rating = rating,
+            id = id,
         )
 
         fun aShow(
