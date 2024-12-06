@@ -7,6 +7,7 @@ import pl.fnfcinema.cinema.IntegrationTest
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.aMovie
 import pl.fnfcinema.cinema.aShow
+import pl.fnfcinema.cinema.movies.MovieId
 import pl.fnfcinema.cinema.movies.Movies
 import pl.fnfcinema.cinema.requireSucc
 import pl.fnfcinema.cinema.shows.Shows.Errors.BadInput
@@ -111,14 +112,14 @@ class ShowsTest(
     fun should_validate_if_movie_exists() {
         // given
         val time = mutableClock.stopTime()
-        val unknownMovieId = UUID.randomUUID()
+        val unknownMovieId = MovieId(UUID.randomUUID())
 
         // when
         val result = shows.addShow(aShow(movieId = unknownMovieId, time + 1.days.toJavaDuration()))
 
         // then
         assertEquals(
-            Err(BadInput("Movie with id: $unknownMovieId does not exist")),
+            Err(BadInput("Movie with id: ${unknownMovieId.value} does not exist")),
             result
         )
     }
@@ -143,9 +144,13 @@ class ShowsTest(
         val movieA = movies.addMovie(aMovie())
         val movieB = movies.addMovie(aMovie())
 
-        val movieATomorrowShow = shows.addShow(aShow(movie = movieA, startTime = time + 1.days.toJavaDuration())).requireSucc()
-        val movieANextWeekShow = shows.addShow(aShow(movie = movieA, startTime = time + 7.days.toJavaDuration())).requireSucc()
-        val movieBDayAfterTomorrowShow = shows.addShow(aShow(movie = movieB, startTime = time + 2.days.toJavaDuration())).requireSucc()
-        val movieBNextWeekShow = shows.addShow(aShow(movie = movieB, startTime = time + 8.days.toJavaDuration())).requireSucc()
+        val movieATomorrowShow =
+            shows.addShow(aShow(movie = movieA, startTime = time + 1.days.toJavaDuration())).requireSucc()
+        val movieANextWeekShow =
+            shows.addShow(aShow(movie = movieA, startTime = time + 7.days.toJavaDuration())).requireSucc()
+        val movieBDayAfterTomorrowShow =
+            shows.addShow(aShow(movie = movieB, startTime = time + 2.days.toJavaDuration())).requireSucc()
+        val movieBNextWeekShow =
+            shows.addShow(aShow(movie = movieB, startTime = time + 8.days.toJavaDuration())).requireSucc()
     }
 }

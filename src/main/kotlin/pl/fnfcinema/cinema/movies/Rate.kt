@@ -9,6 +9,6 @@ data class Rate(val value: Int) {
     companion object {
         val valueRange: IntRange = 1..5
 
-        fun create(value: Int): Rate? = if (valueRange.contains(value)) Rate(value) else null
+        fun fromInt(value: Int): Rate? = if (valueRange.contains(value)) Rate(value) else null
     }
 }

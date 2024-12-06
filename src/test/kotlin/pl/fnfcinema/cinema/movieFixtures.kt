@@ -1,15 +1,15 @@
 package pl.fnfcinema.cinema
 
 import pl.fnfcinema.cinema.movies.MovieEntity
+import pl.fnfcinema.cinema.movies.MovieId
 import pl.fnfcinema.cinema.movies.Rate
 import pl.fnfcinema.cinema.movies.Rating
-import java.util.*
 
 fun aMovie(
     title: String = faker.movie.title(),
     imdbId: String = anImdbId(),
     rating: Rating = Rating(),
-    id: UUID? = null,
+    id: MovieId? = null,
 ) = MovieEntity(
     title = title,
     imdbId = imdbId,

@@ -1,6 +1,5 @@
 package pl.fnfcinema.cinema.shows
 
-import org.springframework.data.jdbc.core.mapping.AggregateReference
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,9 +12,10 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.Api.asErrorResponse
-import pl.fnfcinema.cinema.StaffUserId
 import pl.fnfcinema.cinema.Err
+import pl.fnfcinema.cinema.StaffUserId
 import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.movies.MovieId
 import pl.fnfcinema.cinema.shows.Shows.Errors.ShowsError
 import java.time.Instant
 import java.util.*
@@ -43,7 +43,7 @@ class ShowsApi(
         Api.Security.requireStaffUserId()
         val (startTime, ticketPrice) = showUpdate
         return when (val result =
-            shows.updateShow(showId = id, startTime = startTime, ticketPrice = ticketPrice.toMoney())) {
+            shows.updateShow(showId = ShowId(id), startTime = startTime, ticketPrice = ticketPrice.toMoney())) {
             is Succ<ShowEntity> -> ResponseEntity.ok(result.value.toShow())
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
@@ -52,7 +52,7 @@ class ShowsApi(
     @DeleteMapping("/{id}")
     fun deleteShow(@PathVariable("id") id: UUID): ResponseEntity<Unit> {
         Api.Security.requireStaffUserId()
-        return when (val result = shows.deleteShow(showId = id)) {
+        return when (val result = shows.deleteShow(showId = ShowId(id))) {
             is Succ<Unit> -> ResponseEntity.noContent().build()
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
@@ -63,7 +63,7 @@ class ShowsApi(
         @RequestParam(required = false, name = "movie") movieId: UUID?,
         @RequestParam(name = "limit", defaultValue = "10") limit: Int,
     ): ResponseEntity<List<Responses.Show>> =
-        when (val result = shows.findNearest(movieId, limit)) {
+        when (val result = shows.findNearest(movieId?.let(::MovieId), limit)) {
             is Succ<List<ShowEntity>> -> ResponseEntity.ok(result.value.map { it.toShow() })
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
@@ -80,14 +80,14 @@ class ShowsApi(
     companion object {
         private fun Requests.NewShow.toEntity(staffUserId: StaffUserId) =
             ShowEntity(
-                movieId = AggregateReference.to(this.movieId),
+                movieId = MovieId(movieId),
                 startTime = startTime,
                 ticketPrice = ticketPrice.toMoney(),
                 createdBy = staffUserId,
             )
 
         private fun ShowEntity.toShow() =
-            Responses.Show(id!!, startTime)
+            Responses.Show(id!!.value, startTime)
 
         private fun errorDetails(err: ShowsError): Pair<Int, String> =
             when (err) {

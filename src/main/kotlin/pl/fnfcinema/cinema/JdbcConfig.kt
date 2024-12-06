@@ -5,16 +5,32 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.data.convert.ReadingConverter
 import org.springframework.data.convert.WritingConverter
 import org.springframework.data.jdbc.repository.config.AbstractJdbcConfiguration
+import pl.fnfcinema.cinema.movies.MovieId
+import pl.fnfcinema.cinema.shows.ShowId
 import java.util.*
 
 @Configuration
 class JdbcConfig : AbstractJdbcConfiguration() {
     override fun userConverters(): MutableList<Converter<*, *>> = mutableListOf(
+        EntityIdWriter(),
+        EntityIdReader(::MovieId),
+        EntityIdReader(::ShowId),
+        EntityIdWriter(),
         CurrencyWriter(),
         CurrencyReader(),
         StaffUserIdWriter(),
         StaffUserIdReader()
     )
+}
+
+@WritingConverter
+class EntityIdWriter : Converter<EntityId, UUID> {
+    override fun convert(source: EntityId): UUID = source.value
+}
+
+@ReadingConverter
+class EntityIdReader<IdType : EntityId>(private val idConstructor: (UUID) -> IdType) : Converter<UUID, IdType> {
+    override fun convert(source: UUID): IdType = idConstructor(source)
 }
 
 @WritingConverter

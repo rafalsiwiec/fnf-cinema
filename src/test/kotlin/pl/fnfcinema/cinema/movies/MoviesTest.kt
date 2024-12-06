@@ -117,7 +117,7 @@ class MoviesTest(
     @ValueSource(ints = [-1, 0, 6, 10])
     fun `should validate provided rate to be in allowed range`(invalidRateValue: Int) {
         // given
-        val movieId = UUID.randomUUID()
+        val movieId = MovieId(UUID.randomUUID())
         movies.addMovie(aMovie(id = movieId))
 
         // when
@@ -133,7 +133,7 @@ class MoviesTest(
     @Test
     fun `should return error result on rating when movie does not exist`() {
         // given
-        val unknownMovieId = UUID.randomUUID()
+        val unknownMovieId = MovieId(UUID.randomUUID())
 
         // when
         val result = movies.rate(unknownMovieId, 3)

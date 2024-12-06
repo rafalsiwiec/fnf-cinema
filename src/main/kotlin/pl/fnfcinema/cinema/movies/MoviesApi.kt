@@ -13,7 +13,6 @@ import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.movies.Movies.Errors.MoviesError
 import pl.fnfcinema.cinema.movies.MoviesApi.Requests.NewMovie
-import pl.fnfcinema.cinema.movies.MoviesApi.Responses.BasicMovie
 import java.math.BigDecimal
 import java.net.URI
 import java.time.LocalDate
@@ -24,11 +23,10 @@ import java.util.*
 class MoviesApi(private val movies: Movies) {
 
     @GetMapping
-    fun getAllMovies(): List<BasicMovie> =
-        movies.getAll().map { it.toBasicResponse() }
+    fun getAllMovies(): List<Responses.BasicMovie> = movies.getAll().map { it.toBasicResponse() }
 
     @PostMapping
-    fun addMovie(@RequestBody newMovie: NewMovie): ResponseEntity<BasicMovie> {
+    fun addMovie(@RequestBody newMovie: NewMovie): ResponseEntity<Responses.BasicMovie> {
         Api.Security.requireStaffUserId()
         val movie = movies.addMovie(newMovie.toMovieEntity()).toBasicResponse()
         return ResponseEntity.status(201).body(movie)
@@ -36,17 +34,16 @@ class MoviesApi(private val movies: Movies) {
 
     @GetMapping("/{id}")
     fun getMovie(@PathVariable("id") id: UUID): ResponseEntity<Responses.Movie> =
-        Api.entityOrNotFound(movies.getMovieDetails(id)?.toResponse(id))
+        Api.entityOrNotFound(movies.getMovieDetails(MovieId(id))?.toResponse(id))
 
     @PostMapping("/{id}/rating/{rate}")
     fun rate(
         @PathVariable("id") id: UUID,
         @PathVariable("rate") rate: Int,
-    ): ResponseEntity<BasicMovie> =
-        when (val result = movies.rate(id, rate)) {
-            is Succ<MovieEntity> -> ResponseEntity.ok(result.value.toBasicResponse())
-            is Err<MoviesError> -> result.asErrorResponse(::errorDetails)
-        }
+    ): ResponseEntity<Responses.BasicMovie> = when (val result = movies.rate(MovieId(id), rate)) {
+        is Succ<MovieEntity> -> ResponseEntity.ok(result.value.toBasicResponse())
+        is Err<MoviesError> -> result.asErrorResponse(::errorDetails)
+    }
 
     object Requests {
         data class NewMovie(val title: String, val imdbId: String)
@@ -70,27 +67,18 @@ class MoviesApi(private val movies: Movies) {
     }
 
     companion object {
-        private fun MovieEntity.toBasicResponse(): BasicMovie = BasicMovie(id!!, title, rating.votes, rating.avg())
+        private fun MovieEntity.toBasicResponse(): Responses.BasicMovie =
+            Responses.BasicMovie(id!!.value, title, rating.votes, rating.avg())
+
         private fun MovieDetails.toResponse(id: UUID): Responses.Movie = Responses.Movie(
-            id,
-            title,
-            releaseDate,
-            runtime,
-            genre,
-            director,
-            rating,
-            ratingScale,
-            votes,
-            posterUrl,
-            awards
+            id, title, releaseDate, runtime, genre, director, rating, ratingScale, votes, posterUrl, awards
         )
 
         private fun NewMovie.toMovieEntity(): MovieEntity = MovieEntity(title, imdbId)
 
-        private fun errorDetails(moviesError: MoviesError): Pair<Int, String> =
-            when (moviesError) {
-                is Movies.Errors.BadInput -> 400 to moviesError.details
-                is Movies.Errors.MovieNotFound -> 404 to "Movie with id: ${moviesError.id} not found"
-            }
+        private fun errorDetails(moviesError: MoviesError): Pair<Int, String> = when (moviesError) {
+            is Movies.Errors.BadInput -> 400 to moviesError.details
+            is Movies.Errors.MovieNotFound -> 404 to "Movie with id: ${moviesError.id} not found"
+        }
     }
 }

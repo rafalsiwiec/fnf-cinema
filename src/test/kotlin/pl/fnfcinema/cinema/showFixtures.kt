@@ -1,8 +1,9 @@
 package pl.fnfcinema.cinema
 
-import org.springframework.data.jdbc.core.mapping.AggregateReference
 import pl.fnfcinema.cinema.movies.MovieEntity
+import pl.fnfcinema.cinema.movies.MovieId
 import pl.fnfcinema.cinema.shows.ShowEntity
+import pl.fnfcinema.cinema.shows.ShowId
 import pl.fnfcinema.cinema.shows.ShowsApi
 import java.time.Instant
 import java.util.*
@@ -17,13 +18,13 @@ fun aShow(
 ) = aShow(movieId = movie.id!!, startTime = startTime)
 
 fun aShow(
-    movieId: UUID = UUID.randomUUID(),
+    movieId: MovieId = MovieId(UUID.randomUUID()),
     startTime: Instant = aFutureStartTime(),
     ticketPrice: Money = aTicketPrice(),
     createdBy: StaffUserId = aStaffUserId(),
-    id: UUID? = null,
+    id: ShowId? = null,
 ) = ShowEntity(
-    movieId = AggregateReference.to(movieId),
+    movieId = movieId,
     startTime = startTime,
     ticketPrice = ticketPrice,
     createdBy = createdBy,
@@ -33,7 +34,7 @@ fun aShow(
 fun aNewShow(
     movieId: UUID = UUID.randomUUID(),
     startTime: Instant = aFutureStartTime(),
-    ticketPrice: Api.Money = Api.Money(aTicketPrice())
+    ticketPrice: Api.Money = Api.Money(aTicketPrice()),
 ) = ShowsApi.Requests.NewShow(
     movieId = movieId,
     startTime = startTime,
@@ -42,7 +43,7 @@ fun aNewShow(
 
 fun aShowUpdate(
     startTime: Instant = aFutureStartTime(),
-    ticketPrice: Api.Money = Api.Money(aTicketPrice())
+    ticketPrice: Api.Money = Api.Money(aTicketPrice()),
 ) = ShowsApi.Requests.ShowUpdate(
     startTime = startTime,
     ticketPrice = ticketPrice,

@@ -3,7 +3,6 @@ package pl.fnfcinema.cinema.shows
 import io.mockk.every
 import io.mockk.verify
 import org.junit.jupiter.api.Test
-import org.springframework.data.jdbc.core.mapping.AggregateReference
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -14,11 +13,13 @@ import pl.fnfcinema.cinema.ApiTest
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.Succ
+import pl.fnfcinema.cinema.aFutureStartTime
 import pl.fnfcinema.cinema.aNewShow
 import pl.fnfcinema.cinema.aShow
 import pl.fnfcinema.cinema.aShowUpdate
 import pl.fnfcinema.cinema.aStaffUserId
 import pl.fnfcinema.cinema.aTicketPrice
+import pl.fnfcinema.cinema.movies.MovieId
 import pl.fnfcinema.cinema.shows.Shows.Errors.BadInput
 import pl.fnfcinema.cinema.shows.Shows.Errors.ShowNotFound
 import pl.fnfcinema.cinema.shows.ShowsApi.Requests
@@ -42,13 +43,13 @@ class ShowsApiTest : ApiTest() {
         )
 
         val newShowEntity = ShowEntity(
-            movieId = AggregateReference.to(newShow.movieId),
+            movieId = MovieId(newShow.movieId),
             startTime = newShow.startTime,
             ticketPrice = Money(20.00.toBigDecimal()),
             createdBy = staffUserId
         )
 
-        val createdShowEntityId = UUID.randomUUID()
+        val createdShowEntityId = ShowId(UUID.randomUUID())
         every { shows.addShow(any()) } returns Succ(newShowEntity.copy(id = createdShowEntityId))
 
         // when
@@ -60,12 +61,11 @@ class ShowsApiTest : ApiTest() {
         ).andReturn().response
 
         // then
-        assertEquals(201, response.status)
-
         verify { shows.addShow(newShowEntity) }
 
+        assertEquals(201, response.status)
         assertEquals(
-            Responses.Show(createdShowEntityId, newShow.startTime),
+            Responses.Show(createdShowEntityId.value, newShow.startTime),
             json.parse(response)
         )
     }
@@ -95,13 +95,13 @@ class ShowsApiTest : ApiTest() {
     @Test
     fun `should delete show`() {
         // given
-        val showId = UUID.randomUUID()
+        val showId = ShowId(UUID.randomUUID())
 
         every { shows.deleteShow(any()) } returns Succ(Unit)
 
         // when
         val response = mockMvc.perform(
-            delete("/shows/${showId}")
+            delete("/shows/${showId.value}")
                 .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
         ).andReturn().response
 
@@ -133,13 +133,13 @@ class ShowsApiTest : ApiTest() {
     @Test
     fun `should respond http 404 for unknown show deletion`() {
         // given
-        val unknownShowId = UUID.randomUUID()
+        val unknownShowId = ShowId(UUID.randomUUID())
 
         every { shows.deleteShow(any()) } returns Err(ShowNotFound(unknownShowId))
 
         // when
         val response = mockMvc.perform(
-            delete("/shows/$unknownShowId")
+            delete("/shows/${unknownShowId.value}")
                 .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
         ).andReturn().response
 
@@ -155,7 +155,8 @@ class ShowsApiTest : ApiTest() {
     @Test
     fun `should update show`() {
         // given
-        val show = aShow(id = UUID.randomUUID())
+        val showId = ShowId(UUID.randomUUID())
+        val show = aShow(id = showId)
         val updatedShow = show.copy(
             startTime = show.startTime + 1.days.toJavaDuration(),
             ticketPrice = show.ticketPrice * 2
@@ -165,7 +166,7 @@ class ShowsApiTest : ApiTest() {
 
         // when
         val response = mockMvc.perform(
-            put("/shows/${show.id}")
+            put("/shows/${showId.value}")
                 .contentType(APPLICATION_JSON)
                 .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
                 .content(
@@ -179,23 +180,23 @@ class ShowsApiTest : ApiTest() {
         ).andReturn().response
 
         // then
-        assertEquals(200, response.status)
         verify { shows.updateShow(show.id!!, updatedShow.startTime, updatedShow.ticketPrice) }
+        assertEquals(200, response.status)
     }
 
     @Test
     fun `should respond http 404 for unknown show update`() {
         // given
-        val unknownShowId = UUID.randomUUID()
+        val unknownShowId = ShowId(UUID.randomUUID())
         val updateReq = Requests.ShowUpdate(
-            Instant.now() + 3.days.toJavaDuration(),
+            aFutureStartTime(),
             Api.Money(aTicketPrice())
         )
         every { shows.updateShow(any(), any(), any()) } returns Err(ShowNotFound(unknownShowId))
 
         // when
         val response = mockMvc.perform(
-            put("/shows/${unknownShowId}")
+            put("/shows/${unknownShowId.value}")
                 .contentType(APPLICATION_JSON)
                 .header(X_STAFF_USER_ID_HEADER, aStaffUserId().id)
                 .content(json.writeValueAsBytes(updateReq))
@@ -255,7 +256,7 @@ class ShowsApiTest : ApiTest() {
         verify {
             shows.addShow(
                 ShowEntity(
-                    AggregateReference.to(newShow.movieId),
+                    MovieId(newShow.movieId),
                     newShow.startTime,
                     newShow.ticketPrice.toMoney(),
                     staffUserId
