@@ -123,7 +123,7 @@ class MoviesApiTest : ApiTest() {
         val movie = aMovie(id = movieId)
         val updatedMovie = movie.rate(rate)
 
-        every { movies.rate(any(), any()) } returns Succ(updatedMovie)
+        every { movies.rate(MovieId(any()), any()) } returns Succ(updatedMovie)
 
         // when
         val response = mockMvc.perform(
@@ -149,7 +149,7 @@ class MoviesApiTest : ApiTest() {
         // given
         val unknownMovieId = MovieId(UUID.randomUUID())
 
-        every { movies.rate(any(), any()) } returns Err(MovieNotFound(unknownMovieId))
+        every { movies.rate(MovieId(any()), any()) } returns Err(MovieNotFound(unknownMovieId))
 
         // when
         val response = mockMvc.perform(
@@ -170,7 +170,7 @@ class MoviesApiTest : ApiTest() {
         // given
         val movieId = MovieId(UUID.randomUUID())
 
-        every { movies.rate(any(), any()) } returns Err(BadInput("Something went wrong"))
+        every { movies.rate(MovieId(any()), any()) } returns Err(BadInput("Something went wrong"))
 
         // when
         val response = mockMvc.perform(post("/movies/${movieId.value}/rating/3")).andReturn().response
@@ -189,7 +189,7 @@ class MoviesApiTest : ApiTest() {
         // given
         val movieId = MovieId(UUID.randomUUID())
 
-        every { movies.rate(any(), any()) } throws OptimisticLocking.ConflictError()
+        every { movies.rate(MovieId(any()), any()) } throws OptimisticLocking.ConflictError()
 
         // when
         val response = mockMvc.perform(post("/movies/${movieId.value}/rating/3")).andReturn().response

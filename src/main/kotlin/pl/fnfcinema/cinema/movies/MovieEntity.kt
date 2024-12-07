@@ -22,4 +22,5 @@ data class MovieEntity(
     )
 }
 
-data class MovieId(override val value: UUID) : EntityId
+@JvmInline
+value class MovieId(override val value: UUID) : EntityId

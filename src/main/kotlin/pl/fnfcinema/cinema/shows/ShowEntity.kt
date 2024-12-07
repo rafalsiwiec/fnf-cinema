@@ -23,4 +23,5 @@ data class ShowEntity(
     @Id val id: ShowId? = null,
 )
 
-data class ShowId(override val value: UUID) : EntityId
+@JvmInline
+value class ShowId(override val value: UUID) : EntityId

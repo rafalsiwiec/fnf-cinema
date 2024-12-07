@@ -95,7 +95,7 @@ class ShowsApiTest : ApiTest() {
         // given
         val showId = ShowId(UUID.randomUUID())
 
-        every { shows.deleteShow(any()) } returns Succ(Unit)
+        every { shows.deleteShow(ShowId(any())) } returns Succ(Unit)
 
         // when
         val response = mockMvc.perform(
@@ -131,7 +131,7 @@ class ShowsApiTest : ApiTest() {
         // given
         val unknownShowId = ShowId(UUID.randomUUID())
 
-        every { shows.deleteShow(any()) } returns Err(ShowNotFound(unknownShowId))
+        every { shows.deleteShow(ShowId(any())) } returns Err(ShowNotFound(unknownShowId))
 
         // when
         val response = mockMvc.perform(
@@ -158,7 +158,7 @@ class ShowsApiTest : ApiTest() {
             ticketPrice = show.ticketPrice * 2
         )
 
-        every { shows.updateShow(any(), any(), any()) } returns Succ(updatedShow)
+        every { shows.updateShow(ShowId(any()), any(), any()) } returns Succ(updatedShow)
 
         // when
         val response = mockMvc.perform(
@@ -188,7 +188,7 @@ class ShowsApiTest : ApiTest() {
             aFutureStartTime(),
             Api.Money(aTicketPrice())
         )
-        every { shows.updateShow(any(), any(), any()) } returns Err(ShowNotFound(unknownShowId))
+        every { shows.updateShow(ShowId(any()), any(), any()) } returns Err(ShowNotFound(unknownShowId))
 
         // when
         val response = mockMvc.perform(
