@@ -55,4 +55,8 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    listOf("tests.multithreaded").forEach {
+        systemProperty(it, project.properties[it] ?: "")
+    }
 }

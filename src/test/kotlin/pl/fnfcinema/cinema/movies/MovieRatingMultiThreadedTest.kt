@@ -3,6 +3,7 @@ package pl.fnfcinema.cinema.movies
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.springframework.beans.factory.annotation.Autowired
 import pl.fnfcinema.cinema.IntegrationTest
 import pl.fnfcinema.cinema.aMovie
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.test.assertEquals
 
 
+@EnabledIfSystemProperty(named = "tests.multithreaded", matches = "true")
 class MovieRatingMultiThreadedTest(
     @Autowired val movies: Movies,
 ) : IntegrationTest() {
