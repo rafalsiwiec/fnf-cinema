@@ -4,6 +4,7 @@ import io.restassured.RestAssured
 import io.restassured.http.ContentType.JSON
 import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.hamcrest.Matchers.isA
@@ -41,18 +42,27 @@ class EndToEndTest(
             contentType(JSON)
             body("id", equalTo(furious7Id))
             body("title", equalTo("Furious 7"))
-            body("releaseDate", equalTo("2015-04-03"))
-            body("runtime", equalTo("137 min"))
-            body("genre", equalTo("Action, Crime, Thriller"))
-            body("director", equalTo("James Wan"))
-            body("rating", isA<Float>(Float::class.java))
-            body("ratingScale", equalTo(10))
-            body("votes", greaterThanOrEqualTo(42000))
+
+            body("rating.origin", equalTo("fnfcinema"))
+            body("rating.votes", equalTo(0))
+            body("rating.avgRate", equalTo(null))
+            body("rating.scale", equalTo(5))
+
+            body("details.releaseDate", equalTo("2015-04-03"))
+            body("details.runtime", equalTo("137 min"))
+            body("details.genre", equalTo("Action, Crime, Thriller"))
+            body("details.director", equalTo("James Wan"))
             body(
-                "posterUrl",
+                "details.posterUrl",
                 equalTo("https://m.media-amazon.com/images/M/MV5BMTQxOTA2NDUzOV5BMl5BanBnXkFtZTgwNzY2MTMxMzE@._V1_SX300.jpg")
             )
-            body("awards", equalTo("36 wins & 36 nominations"))
+            body("details.awards", equalTo("36 wins & 36 nominations"))
+
+            body("details.ratings", Matchers.hasSize<List<*>>(1))
+            body("details.ratings[0].origin", equalTo("imdb"))
+            body("details.ratings[0].votes", greaterThanOrEqualTo(42000))
+            body("details.ratings[0].avgRate", isA<Float>(Float::class.java))
+            body("details.ratings[0].scale", equalTo(10))
         }
     }
 }

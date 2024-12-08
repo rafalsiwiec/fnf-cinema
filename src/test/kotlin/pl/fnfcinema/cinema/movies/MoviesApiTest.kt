@@ -219,15 +219,17 @@ class MoviesApiTest : BaseApiTest() {
             MoviesApi.MovieDetailsRes(
                 id = movieId,
                 title = movie.title,
-                releaseDate = movieDetails.releaseDate,
-                runtime = movieDetails.runtime,
-                genre = movieDetails.genre,
-                director = movieDetails.director,
-                posterUrl = movieDetails.posterUrl,
-                awards = movieDetails.awards,
-                ratings = listOf(
-                    MoviesApi.Rating("fnfcinema", 1234, BigDecimal("2.0"), 5),
-                    MoviesApi.Rating("imdb", movieDetails.votes, movieDetails.rating, movieDetails.ratingScale),
+                rating = MoviesApi.Rating("fnfcinema", 1234, BigDecimal("2.0"), 5),
+                details = MoviesApi.Details(
+                    releaseDate = movieDetails.releaseDate,
+                    runtime = movieDetails.runtime,
+                    genre = movieDetails.genre,
+                    director = movieDetails.director,
+                    posterUrl = movieDetails.posterUrl,
+                    awards = movieDetails.awards,
+                    ratings = listOf(
+                        MoviesApi.Rating("imdb", movieDetails.votes, movieDetails.rating, movieDetails.ratingScale),
+                    )
                 )
             ),
             json.parse(response)

@@ -56,18 +56,23 @@ class MoviesApi(private val movies: Movies) {
 
     data class AddMovieReq(val title: String, val imdbId: String)
     data class BasicMovieRes(val id: UUID, val title: String, val votes: Long = 0, val avgRate: BigDecimal? = null)
-    data class MovieDetailsRes(
-        val id: UUID,
-        val title: String,
+    data class Rating(val origin: String, val votes: Long, val avgRate: BigDecimal?, val scale: Int)
+    data class Details(
         val releaseDate: LocalDate,
         val runtime: String,
         val genre: String,
         val director: String,
         val posterUrl: URI,
         val awards: String,
-        val ratings: List<Rating>
+        val ratings: List<Rating>,
     )
-    data class Rating(val origin: String, val votes: Long, val avgRate: BigDecimal?, val scale: Int)
+
+    data class MovieDetailsRes(
+        val id: UUID,
+        val title: String,
+        val rating: Rating,
+        val details: Details?,
+    )
 
     companion object {
         private fun MovieEntity.toBasicResponse(): BasicMovieRes =
@@ -89,12 +94,6 @@ class MoviesApi(private val movies: Movies) {
 
             val ratings = listOf(
                 Rating(
-                    origin = "fnfcinema",
-                    votes = entity.rating.votes,
-                    avgRate = entity.rating.avg(),
-                    scale = Rate.SCALE
-                ),
-                Rating(
                     origin = "imdb",
                     votes = votes,
                     avgRate = rating,
@@ -105,13 +104,21 @@ class MoviesApi(private val movies: Movies) {
             return MovieDetailsRes(
                 id = entity.id!!.value,
                 title = entity.title,
-                releaseDate = releaseDate,
-                runtime = runtime,
-                genre = genre,
-                director = director,
-                posterUrl = posterUrl,
-                awards = awards,
-                ratings = ratings
+                rating = Rating(
+                    origin = "fnfcinema",
+                    votes = entity.rating.votes,
+                    avgRate = entity.rating.avg(),
+                    scale = Rate.SCALE
+                ),
+                details = Details(
+                    releaseDate = releaseDate,
+                    runtime = runtime,
+                    genre = genre,
+                    director = director,
+                    posterUrl = posterUrl,
+                    awards = awards,
+                    ratings = ratings
+                )
             )
         }
 
