@@ -43,7 +43,10 @@ class MoviesApi(private val movies: Movies) {
 
     @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     fun getMovie(@PathVariable("id") id: UUID): ResponseEntity<MovieDetailsRes> =
-        Api.entityOrNotFound(movies.getMovieDetails(MovieId(id))?.toResponse())
+        when (val result = movies.getMovieDetails(MovieId(id))) {
+            is Succ<Pair<MovieEntity, MovieDetails?>> -> ResponseEntity.ok(result.value.toResponse())
+            is Err<MoviesError> -> result.asErrorResponse(::errorDetails)
+        }
 
     @PostMapping("/{id}/rating/{rate}", consumes = [ALL_VALUE], produces = [APPLICATION_JSON_VALUE])
     fun rate(
@@ -78,28 +81,39 @@ class MoviesApi(private val movies: Movies) {
         private fun MovieEntity.toBasicResponse(): BasicMovieRes =
             BasicMovieRes(id!!.value, title, rating.votes, rating.avg())
 
-        private fun Pair<MovieEntity, MovieDetails>.toResponse(): MovieDetailsRes {
-            val (entity, details) = this
-            val (
-                releaseDate: LocalDate,
-                runtime: String,
-                genre: String,
-                director: String,
-                rating: BigDecimal,
-                ratingScale: Int,
-                votes: Long,
-                posterUrl: URI,
-                awards: String,
-            ) = details
+        private fun Pair<MovieEntity, MovieDetails?>.toResponse(): MovieDetailsRes {
+            val (entity, fetchedDetails) = this
 
-            val ratings = listOf(
-                Rating(
-                    origin = "imdb",
-                    votes = votes,
-                    avgRate = rating,
-                    scale = ratingScale
+            val details = fetchedDetails?.let {
+                val (
+                    releaseDate: LocalDate,
+                    runtime: String,
+                    genre: String,
+                    director: String,
+                    rating: BigDecimal,
+                    ratingScale: Int,
+                    votes: Long,
+                    posterUrl: URI,
+                    awards: String,
+                ) = it
+
+                Details(
+                    releaseDate = releaseDate,
+                    runtime = runtime,
+                    genre = genre,
+                    director = director,
+                    posterUrl = posterUrl,
+                    awards = awards,
+                    ratings = listOf(
+                        Rating(
+                            origin = "imdb",
+                            votes = votes,
+                            avgRate = rating,
+                            scale = ratingScale
+                        )
+                    )
                 )
-            )
+            }
 
             return MovieDetailsRes(
                 id = entity.id!!.value,
@@ -110,15 +124,7 @@ class MoviesApi(private val movies: Movies) {
                     avgRate = entity.rating.avg(),
                     scale = Rate.SCALE
                 ),
-                details = Details(
-                    releaseDate = releaseDate,
-                    runtime = runtime,
-                    genre = genre,
-                    director = director,
-                    posterUrl = posterUrl,
-                    awards = awards,
-                    ratings = ratings
-                )
+                details = details
             )
         }
 

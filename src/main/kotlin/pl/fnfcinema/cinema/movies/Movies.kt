@@ -20,10 +20,15 @@ class Movies(
 
     fun getAll(): List<MovieEntity> = repo.findAll().toList()
 
-    fun getMovieDetails(id: MovieId): Pair<MovieEntity, MovieDetails>? =
+    fun getMovieDetails(id: MovieId): Res<Pair<MovieEntity, MovieDetails?>, Errors.MoviesError> =
         repo.findByIdOrNull(id)?.let {
-            it to movieDetailsProvider.fetchDetails(it.imdbId)
-        }
+            try {
+                val details = movieDetailsProvider.fetchDetails(it.imdbId)
+                Succ(it to details)
+            } catch (_: Exception) {
+                Succ(it to null)
+            }
+        } ?: Err(Errors.MovieNotFound(id))
 
     fun addMovie(newMovie: MovieEntity): MovieEntity = repo.save(newMovie)
 

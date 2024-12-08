@@ -9,7 +9,9 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import pl.fnfcinema.cinema.BaseIntegrationTest
 import pl.fnfcinema.cinema.Err
+import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.aMovie
+import pl.fnfcinema.cinema.anImdbId
 import pl.fnfcinema.cinema.anImdbMovie
 import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
 import pl.fnfcinema.cinema.requireSucc
@@ -55,16 +57,18 @@ class MoviesTest(
         confirmVerified(imdbApi)
 
         assertEquals(
-            savedMovie to MovieDetails(
-                imdbMovie.releaseDate,
-                imdbMovie.runtime,
-                imdbMovie.genre,
-                imdbMovie.director,
-                imdbMovie.imdbRating,
-                10,
-                imdbMovie.imdbVotes.value,
-                imdbMovie.poster,
-                imdbMovie.awards,
+            Succ(
+                savedMovie to MovieDetails(
+                    imdbMovie.releaseDate,
+                    imdbMovie.runtime,
+                    imdbMovie.genre,
+                    imdbMovie.director,
+                    imdbMovie.imdbRating,
+                    10,
+                    imdbMovie.imdbVotes.value,
+                    imdbMovie.poster,
+                    imdbMovie.awards,
+                )
             ),
             firstResult
         )
@@ -77,6 +81,26 @@ class MoviesTest(
 
         // no additional call to imdbApi was performed
         confirmVerified(imdbApi)
+    }
+
+    @Test
+    fun `should return empty details when imdb api fails`() {
+        // given
+        val imdbId = anImdbId()
+        val movie = movies.addMovie(aMovie(imdbId = imdbId))
+
+        every { imdbApi.fetchMovieById(any()) } throws RuntimeException("some api failure")
+
+        // when
+        val result = movies.getMovieDetails(movie.id!!)
+
+        // then
+        verify { imdbApi.fetchMovieById(imdbId) }
+
+        assertEquals(
+            Succ(movie to null),
+            result
+        )
     }
 
     @Test

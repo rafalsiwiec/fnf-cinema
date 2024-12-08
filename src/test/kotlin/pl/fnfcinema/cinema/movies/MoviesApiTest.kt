@@ -104,7 +104,7 @@ class MoviesApiTest : BaseApiTest() {
         // given
         val id = MovieId(UUID.randomUUID())
 
-        every { movies.getMovieDetails(id) } returns null
+        every { movies.getMovieDetails(id) } returns Err(Movies.Errors.MovieNotFound(id))
 
         // when
         val response = mockMvc.perform(get("/movies/${id.value}")).andReturn().response
@@ -206,7 +206,7 @@ class MoviesApiTest : BaseApiTest() {
         val movie = aMovie(id = MovieId(movieId), rating = Rating(1234, 2468))
         val movieDetails = aMovieDetails()
 
-        every { movies.getMovieDetails(MovieId(any())) } returns (movie to movieDetails)
+        every { movies.getMovieDetails(MovieId(any())) } returns Succ(movie to movieDetails)
 
         // when
         val response = mockMvc.perform(get("/movies/$movieId")).andReturn().response
@@ -241,7 +241,7 @@ class MoviesApiTest : BaseApiTest() {
         // given
         val movieId = UUID.randomUUID()
 
-        every { movies.getMovieDetails(MovieId(any())) } returns null
+        every { movies.getMovieDetails(MovieId(any())) } returns Err(Movies.Errors.MovieNotFound(MovieId(movieId)))
 
         // when
         val response = mockMvc.perform(get("/movies/$movieId")).andReturn().response
