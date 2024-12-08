@@ -12,7 +12,6 @@ class ImdbMovieDetailsProvider(private val imdbApi: ImdbApi) : MovieDetailsProvi
     override fun fetchDetails(id: String): MovieDetails {
         val imdbMovie = imdbApi.fetchMovieById(id)
         return MovieDetails(
-            imdbMovie.title,
             imdbMovie.releaseDate,
             imdbMovie.runtime,
             imdbMovie.genre,

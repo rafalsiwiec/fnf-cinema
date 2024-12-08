@@ -2,7 +2,6 @@ package pl.fnfcinema.cinema.shows
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.http.MediaType.ALL_VALUE
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -37,10 +36,10 @@ class ShowsApi(
 
     @SecurityRequirement(name = STAFF_ONLY)
     @PostMapping(consumes = [APPLICATION_JSON_VALUE], produces = [APPLICATION_JSON_VALUE])
-    fun addShow(@RequestBody addShowReq: AddShowReq): ResponseEntity<ShowRes> {
+    fun addShow(@RequestBody addShowReq: AddShowReq): ResponseEntity<BasicShowRes> {
         val staffUserId = Api.Security.requireStaffUserId()
         return when (val result = shows.addShow(addShowReq.toEntity(staffUserId))) {
-            is Succ<ShowEntity> -> ResponseEntity.status(201).body(result.value.toShow())
+            is Succ<ShowEntity> -> ResponseEntity.status(201).body(result.value.toBasicShow())
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
     }
@@ -50,12 +49,12 @@ class ShowsApi(
     fun updateShow(
         @PathVariable("id") id: UUID,
         @RequestBody showUpdate: UpdateShowReq,
-    ): ResponseEntity<ShowRes> {
+    ): ResponseEntity<BasicShowRes> {
         Api.Security.requireStaffUserId()
         val (startTime, ticketPrice) = showUpdate
         return when (val result =
             shows.updateShow(showId = ShowId(id), startTime = startTime, ticketPrice = ticketPrice.toMoney())) {
-            is Succ<ShowEntity> -> ResponseEntity.ok(result.value.toShow())
+            is Succ<ShowEntity> -> ResponseEntity.ok(result.value.toBasicShow())
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
     }
@@ -76,13 +75,14 @@ class ShowsApi(
         @RequestParam(name = "limit", defaultValue = "10") limit: Int,
     ): ResponseEntity<List<ShowRes>> =
         when (val result = shows.findNearest(movieId?.let(::MovieId), limit)) {
-            is Succ<List<ShowEntity>> -> ResponseEntity.ok(result.value.map { it.toShow() })
+            is Succ<List<ShowDetails>> -> ResponseEntity.ok(result.value.map { it.toShow() })
             is Err<ShowsError> -> result.asErrorResponse(::errorDetails)
         }
 
     data class AddShowReq(val movieId: UUID, val startTime: Instant, val ticketPrice: Api.Money)
     data class UpdateShowReq(val startTime: Instant, val ticketPrice: Api.Money)
-    data class ShowRes(val id: UUID, val startTime: Instant)
+    data class ShowRes(val id: UUID, val startTime: Instant, val ticketPrice: Api.Money, val movieId: UUID, val movieTitle: String)
+    data class BasicShowRes(val id: UUID, val startTime: Instant, val ticketPrice: Api.Money)
 
     companion object {
         private fun AddShowReq.toEntity(staffUserId: StaffUserId) =
@@ -93,8 +93,14 @@ class ShowsApi(
                 createdBy = staffUserId,
             )
 
-        private fun ShowEntity.toShow() =
-            ShowRes(id!!.value, startTime)
+        private fun ShowDetails.toShow() = ShowRes(
+            id = id.value,
+            startTime = startTime,
+            ticketPrice = Api.Money(ticketPrice),
+            movieId = movieId.value,
+            movieTitle = movieTitle,
+        )
+        private fun ShowEntity.toBasicShow() = BasicShowRes(id!!.value, startTime, Api.Money(ticketPrice))
 
         private fun errorDetails(err: ShowsError): Pair<Int, String> =
             when (err) {

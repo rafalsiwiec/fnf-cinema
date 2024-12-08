@@ -2,7 +2,6 @@ package pl.fnfcinema.cinema.movies
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.http.MediaType.ALL
 import org.springframework.http.MediaType.ALL_VALUE
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.http.ResponseEntity
@@ -25,8 +24,7 @@ import java.util.*
 
 
 @Tag(
-    name = "Movies API",
-    description = "Manages movies"
+    name = "Movies API", description = "Manages movies"
 )
 @RestController
 @RequestMapping("/movies")
@@ -45,7 +43,7 @@ class MoviesApi(private val movies: Movies) {
 
     @GetMapping("/{id}", produces = [APPLICATION_JSON_VALUE])
     fun getMovie(@PathVariable("id") id: UUID): ResponseEntity<MovieDetailsRes> =
-        Api.entityOrNotFound(movies.getMovieDetails(MovieId(id))?.toResponse(id))
+        Api.entityOrNotFound(movies.getMovieDetails(MovieId(id))?.toResponse())
 
     @PostMapping("/{id}/rating/{rate}", consumes = [ALL_VALUE], produces = [APPLICATION_JSON_VALUE])
     fun rate(
@@ -65,20 +63,57 @@ class MoviesApi(private val movies: Movies) {
         val runtime: String,
         val genre: String,
         val director: String,
-        val rating: BigDecimal,
-        val ratingScale: Int,
-        val votes: Int,
         val posterUrl: URI,
         val awards: String,
+        val ratings: List<Rating>
     )
+    data class Rating(val origin: String, val votes: Long, val avgRate: BigDecimal?, val scale: Int)
 
     companion object {
         private fun MovieEntity.toBasicResponse(): BasicMovieRes =
             BasicMovieRes(id!!.value, title, rating.votes, rating.avg())
 
-        private fun MovieDetails.toResponse(id: UUID): MovieDetailsRes = MovieDetailsRes(
-            id, title, releaseDate, runtime, genre, director, rating, ratingScale, votes, posterUrl, awards
-        )
+        private fun Pair<MovieEntity, MovieDetails>.toResponse(): MovieDetailsRes {
+            val (entity, details) = this
+            val (
+                releaseDate: LocalDate,
+                runtime: String,
+                genre: String,
+                director: String,
+                rating: BigDecimal,
+                ratingScale: Int,
+                votes: Long,
+                posterUrl: URI,
+                awards: String,
+            ) = details
+
+            val ratings = listOf(
+                Rating(
+                    origin = "fnfcinema",
+                    votes = entity.rating.votes,
+                    avgRate = entity.rating.avg(),
+                    scale = Rate.SCALE
+                ),
+                Rating(
+                    origin = "imdb",
+                    votes = votes,
+                    avgRate = rating,
+                    scale = ratingScale
+                )
+            )
+
+            return MovieDetailsRes(
+                id = entity.id!!.value,
+                title = entity.title,
+                releaseDate = releaseDate,
+                runtime = runtime,
+                genre = genre,
+                director = director,
+                posterUrl = posterUrl,
+                awards = awards,
+                ratings = ratings
+            )
+        }
 
         private fun AddMovieReq.toMovieEntity(): MovieEntity = MovieEntity(title, imdbId)
 

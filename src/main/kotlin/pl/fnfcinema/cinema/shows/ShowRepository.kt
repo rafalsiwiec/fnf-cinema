@@ -1,16 +1,16 @@
 package pl.fnfcinema.cinema.shows
 
-import org.springframework.data.jdbc.repository.query.Query
+import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.CrudRepository
+import org.springframework.data.repository.PagingAndSortingRepository
 import pl.fnfcinema.cinema.movies.MovieId
 import java.time.Instant
 
-interface ShowRepository : CrudRepository<ShowEntity, ShowId> {
+interface ShowRepository : CrudRepository<ShowEntity, ShowId>
 
-    @Query("select * from show where start_time >= :after order by start_time limit :limit")
-    fun findStartingAfter(after: Instant, limit: Int): List<ShowEntity>
+interface ShowQueryRepository : PagingAndSortingRepository<ShowDetails, ShowId> {
 
-    @Query("select * from show where movie_id = :movieId and start_time >= :after order by start_time limit :limit")
-    fun findStaringAfterByMovieId(movieId: MovieId, after: Instant, limit: Int): List<ShowEntity>
+    fun findByStartTimeAfter(afterStartTime: Instant, pageable: Pageable): List<ShowDetails>
+    fun findByMovieIdAndStartTimeAfter(movieId: MovieId, afterStartTime: Instant, pageable: Pageable): List<ShowDetails>
 
 }

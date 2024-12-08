@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import pl.fnfcinema.cinema.BaseIntegrationTest
 import pl.fnfcinema.cinema.Err
-import pl.fnfcinema.cinema.IntegrationTest
 import pl.fnfcinema.cinema.aMovie
 import pl.fnfcinema.cinema.anImdbMovie
 import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 
 class MoviesTest(
     @Autowired val movies: Movies,
-) : IntegrationTest() {
+) : BaseIntegrationTest() {
 
     @Test
     fun should_add_new_movie_and_then_return() {
@@ -55,8 +55,7 @@ class MoviesTest(
         confirmVerified(imdbApi)
 
         assertEquals(
-            MovieDetails(
-                imdbMovie.title,
+            savedMovie to MovieDetails(
                 imdbMovie.releaseDate,
                 imdbMovie.runtime,
                 imdbMovie.genre,

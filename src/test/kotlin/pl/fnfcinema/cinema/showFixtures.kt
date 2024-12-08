@@ -2,6 +2,7 @@ package pl.fnfcinema.cinema
 
 import pl.fnfcinema.cinema.movies.MovieEntity
 import pl.fnfcinema.cinema.movies.MovieId
+import pl.fnfcinema.cinema.shows.ShowDetails
 import pl.fnfcinema.cinema.shows.ShowEntity
 import pl.fnfcinema.cinema.shows.ShowId
 import pl.fnfcinema.cinema.shows.ShowsApi
@@ -28,6 +29,20 @@ fun aShow(
     startTime = startTime,
     ticketPrice = ticketPrice,
     createdBy = createdBy,
+    id = id
+)
+
+fun aShowDetails(
+    movieId: MovieId = MovieId(UUID.randomUUID()),
+    movieTitle: String = aMovieTitle(),
+    startTime: Instant = aFutureStartTime(),
+    ticketPrice: Money = aTicketPrice(),
+    id: ShowId = ShowId(UUID.randomUUID()),
+) = ShowDetails(
+    movieId = movieId,
+    movieTitle = movieTitle,
+    startTime = startTime,
+    ticketPrice = ticketPrice,
     id = id
 )
 

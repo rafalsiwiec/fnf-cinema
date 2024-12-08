@@ -8,21 +8,23 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.Api.Security.X_STAFF_USER_ID_HEADER
-import pl.fnfcinema.cinema.ApiTest
+import pl.fnfcinema.cinema.BaseApiTest
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.OptimisticLocking
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.aMovie
+import pl.fnfcinema.cinema.aMovieDetails
 import pl.fnfcinema.cinema.aRate
 import pl.fnfcinema.cinema.aStaffUserId
 import pl.fnfcinema.cinema.movies.Movies.Errors.BadInput
 import pl.fnfcinema.cinema.movies.Movies.Errors.MovieNotFound
 import pl.fnfcinema.cinema.movies.MoviesApi.AddMovieReq
 import pl.fnfcinema.cinema.movies.MoviesApi.BasicMovieRes
+import java.math.BigDecimal
 import java.util.*
 import kotlin.test.assertEquals
 
-class MoviesApiTest : ApiTest() {
+class MoviesApiTest : BaseApiTest() {
 
     @Test
     fun should_add_movie() {
@@ -46,8 +48,10 @@ class MoviesApiTest : ApiTest() {
         verify { movies.addMovie(newMovie) }
 
         assertEquals(201, response.status)
-        val responseBody = json.readValue(response.contentAsByteArray, BasicMovieRes::class.java)
-        assertEquals(BasicMovieRes(newMovieId, savedMovie.title), responseBody)
+        assertEquals(
+            BasicMovieRes(newMovieId, savedMovie.title),
+            json.parse(response)
+        )
     }
 
     @Test
@@ -71,7 +75,7 @@ class MoviesApiTest : ApiTest() {
     }
 
     @Test
-    fun should_search_movies() {
+    fun `should return all movies`() {
         // given
         val firstMovie = aMovie(id = MovieId(UUID.randomUUID()))
         val secondMovie = aMovie(id = MovieId(UUID.randomUUID()))
@@ -84,16 +88,12 @@ class MoviesApiTest : ApiTest() {
         // then
         assertEquals(200, response.status)
         assertEquals("application/json", response.getHeader("content-type"))
-        val foundMovies = json.readerFor(BasicMovieRes::class.java)
-            .readValues<BasicMovieRes>(response.contentAsByteArray)
-            .readAll()
-        assertEquals(2, foundMovies.size)
         assertEquals(
             listOf(
                 BasicMovieRes(firstMovie.id!!.value, firstMovie.title),
                 BasicMovieRes(secondMovie.id!!.value, secondMovie.title)
             ),
-            foundMovies
+            json.parseList(response)
         )
 
         verify { movies.getAll() }
@@ -197,5 +197,56 @@ class MoviesApiTest : ApiTest() {
         // then
         verify { movies.rate(movieId, 3) }
         assertEquals(409, response.status)
+    }
+
+    @Test
+    fun `should return movie details`() {
+        // given
+        val movieId = UUID.randomUUID()
+        val movie = aMovie(id = MovieId(movieId), rating = Rating(1234, 2468))
+        val movieDetails = aMovieDetails()
+
+        every { movies.getMovieDetails(MovieId(any())) } returns (movie to movieDetails)
+
+        // when
+        val response = mockMvc.perform(get("/movies/$movieId")).andReturn().response
+
+        // then
+        verify { movies.getMovieDetails(MovieId(movieId)) }
+
+        assertEquals(200, response.status)
+        assertEquals(
+            MoviesApi.MovieDetailsRes(
+                id = movieId,
+                title = movie.title,
+                releaseDate = movieDetails.releaseDate,
+                runtime = movieDetails.runtime,
+                genre = movieDetails.genre,
+                director = movieDetails.director,
+                posterUrl = movieDetails.posterUrl,
+                awards = movieDetails.awards,
+                ratings = listOf(
+                    MoviesApi.Rating("fnfcinema", 1234, BigDecimal("2.0"), 5),
+                    MoviesApi.Rating("imdb", movieDetails.votes, movieDetails.rating, movieDetails.ratingScale),
+                )
+            ),
+            json.parse(response)
+        )
+    }
+
+    @Test
+    fun `should respond http 404 when movie not found`() {
+        // given
+        val movieId = UUID.randomUUID()
+
+        every { movies.getMovieDetails(MovieId(any())) } returns null
+
+        // when
+        val response = mockMvc.perform(get("/movies/$movieId")).andReturn().response
+
+        // then
+        verify { movies.getMovieDetails(MovieId(movieId)) }
+
+        assertEquals(404, response.status)
     }
 }

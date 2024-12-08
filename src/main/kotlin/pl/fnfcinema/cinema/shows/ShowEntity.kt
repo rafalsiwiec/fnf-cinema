@@ -16,11 +16,20 @@ import java.util.*
 data class ShowEntity(
     val movieId: MovieId,
     val startTime: Instant,
-    @Embedded(onEmpty = USE_EMPTY)
+    @Embedded(onEmpty = USE_EMPTY, prefix = "ticket_price_")
     val ticketPrice: Money,
     val createdBy: StaffUserId,
     @Version val version: Int = 0,
     @Id val id: ShowId? = null,
+)
+
+data class ShowDetails(
+    val movieId: MovieId,
+    val movieTitle: String,
+    val startTime: Instant,
+    @Embedded(onEmpty = USE_EMPTY, prefix = "ticket_price_")
+    val ticketPrice: Money,
+    val id: ShowId,
 )
 
 @JvmInline

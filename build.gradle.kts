@@ -44,6 +44,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("com.ninja-squad:springmockk:4.0.2")
     testImplementation("io.github.serpro69:kotlin-faker:1.16.0")
+    testImplementation("io.rest-assured:rest-assured:5.5.0")
+    testImplementation("io.rest-assured:kotlin-extensions:5.5.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -56,7 +58,7 @@ kotlin {
 tasks.withType<Test> {
     useJUnitPlatform()
 
-    listOf("tests.multithreaded").forEach {
+    listOf("tests.multithreaded", "tests.endtoend").forEach {
         systemProperty(it, project.properties[it] ?: "")
     }
 }

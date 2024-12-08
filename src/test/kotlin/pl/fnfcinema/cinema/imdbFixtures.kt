@@ -1,6 +1,6 @@
 package pl.fnfcinema.cinema
 
-import pl.fnfcinema.cinema.integrations.imdb.ImdbInt
+import pl.fnfcinema.cinema.integrations.imdb.ImdbLong
 import pl.fnfcinema.cinema.integrations.imdb.ImdbMovie
 import java.math.BigDecimal
 import java.net.URI
@@ -14,7 +14,7 @@ fun anImdbMovie() = ImdbMovie(
     "action",
     "unknown",
     BigDecimal("1.5"),
-    ImdbInt(123),
+    ImdbLong(123),
     URI.create("http://image.com/movie.jpg"),
     "unknown"
 )

@@ -20,14 +20,14 @@ data class ImdbMovie(
     @JsonProperty("Director")
     val director: String,
     val imdbRating: BigDecimal,
-    val imdbVotes: ImdbInt,
+    val imdbVotes: ImdbLong,
     @JsonProperty("Poster")
     val poster: URI,
     @JsonProperty("Awards")
     val awards: String
 )
 
-data class ImdbInt(val value: Int) {
+data class ImdbLong(val value: Long) {
     @JsonCreator
-    constructor(strValue: String) : this(Integer.parseInt(strValue.replace(",", "")))
+    constructor(strValue: String) : this(strValue.replace(",", "").toLong())
 }

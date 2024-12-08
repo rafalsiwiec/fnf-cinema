@@ -1,5 +1,8 @@
 package pl.fnfcinema.cinema.shows
 
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Sort.Direction.ASC
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import pl.fnfcinema.cinema.Err
@@ -15,6 +18,7 @@ import java.time.Instant
 @Service
 class Shows(
     private val repo: ShowRepository,
+    private val queryRepo: ShowQueryRepository,
     private val movies: Movies,
     private val clock: Clock,
 ) {
@@ -40,15 +44,16 @@ class Shows(
         return Succ(repo.save(show.copy(startTime = startTime, ticketPrice = ticketPrice)))
     }
 
-    fun findNearest(movieId: MovieId?, limit: Int): Res<List<ShowEntity>, ShowsError> {
+    fun findNearest(movieId: MovieId?, limit: Int): Res<List<ShowDetails>, ShowsError> {
         if (limit < 1 || limit > 20) return Err(Errors.BadInput("Limit must be between 1 and 20"))
 
         val now = Instant.now(clock)
+        val page = PageRequest.of(0, limit, Sort.by(ASC, "startTime"))
 
         return Succ(
             when (movieId) {
-                null -> repo.findStartingAfter(now, limit)
-                else -> repo.findStaringAfterByMovieId(movieId, now, limit)
+                null -> queryRepo.findByStartTimeAfter(now, page)
+                else -> queryRepo.findByMovieIdAndStartTimeAfter(movieId, now, page)
             }
         )
     }

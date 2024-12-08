@@ -14,8 +14,8 @@ import org.springframework.data.repository.CrudRepository
 import pl.fnfcinema.cinema.integrations.imdb.ImdbApi
 
 @SpringBootTest
-@Import(IntegrationTest.TestConfig::class)
-abstract class IntegrationTest {
+@Import(BaseIntegrationTest.TestConfig::class)
+abstract class BaseIntegrationTest {
 
     @MockkBean
     lateinit var imdbApi: ImdbApi

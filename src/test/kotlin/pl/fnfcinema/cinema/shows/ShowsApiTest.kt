@@ -5,16 +5,18 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import pl.fnfcinema.cinema.Api
 import pl.fnfcinema.cinema.Api.Security.X_STAFF_USER_ID_HEADER
-import pl.fnfcinema.cinema.ApiTest
+import pl.fnfcinema.cinema.BaseApiTest
 import pl.fnfcinema.cinema.Err
 import pl.fnfcinema.cinema.Money
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.aFutureStartTime
 import pl.fnfcinema.cinema.aShow
+import pl.fnfcinema.cinema.aShowDetails
 import pl.fnfcinema.cinema.aStaffUserId
 import pl.fnfcinema.cinema.aTicketPrice
 import pl.fnfcinema.cinema.anAddShowReq
@@ -28,7 +30,7 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toJavaDuration
 
-class ShowsApiTest : ApiTest() {
+class ShowsApiTest : BaseApiTest() {
 
     @Test
     fun should_add_new_show() {
@@ -63,7 +65,7 @@ class ShowsApiTest : ApiTest() {
 
         assertEquals(201, response.status)
         assertEquals(
-            ShowsApi.ShowRes(createdShowEntityId.value, addShowReq.startTime),
+            ShowsApi.BasicShowRes(createdShowEntityId.value, addShowReq.startTime, addShowReq.ticketPrice),
             json.parse(response)
         )
     }
@@ -260,4 +262,62 @@ class ShowsApiTest : ApiTest() {
             )
         }
     }
+
+    @Test
+    fun `should list all available shows without movie filter`() {
+        // given
+        val limit = 15
+        val availableShowDetails = (1..5).map { aShowDetails() }
+        every { shows.findNearest(MovieId(any()), any()) } returns Succ(availableShowDetails)
+
+        // when
+        val response = mockMvc.perform(
+            get("/shows")
+                .queryParam("limit", limit.toString())
+        ).andReturn().response
+
+        // then
+        verify { shows.findNearest(null, limit) }
+
+        assertEquals(200, response.status)
+        assertEquals(
+            availableShowDetails.map(::toShowRes),
+            json.parseList(response)
+        )
+    }
+
+    @Test
+    fun `should list all available shows with movie filter`() {
+        // given
+        val limit = 15
+        val movieId = UUID.randomUUID()
+        val availableShowDetails = (1..5).map { aShowDetails() }
+        every { shows.findNearest(MovieId(any()), any()) } returns Succ(availableShowDetails)
+
+        // when
+        val response = mockMvc.perform(
+            get("/shows")
+                .queryParam("limit", limit.toString())
+                .queryParam("movie", movieId.toString())
+        ).andReturn().response
+
+        // then
+        verify { shows.findNearest(MovieId(movieId), limit) }
+
+        assertEquals(200, response.status)
+        val expected: List<ShowsApi.ShowRes> = availableShowDetails.map(::toShowRes)
+        val actual: List<ShowsApi.ShowRes> = json.parseList<ShowsApi.ShowRes>(response)
+        assertEquals(
+            expected,
+            actual
+        )
+    }
+
+    private fun toShowRes(details: ShowDetails) = ShowsApi.ShowRes(
+        id = details.id.value,
+        startTime = details.startTime,
+        ticketPrice = Api.Money(details.ticketPrice),
+        movieId = details.movieId.value,
+        movieTitle = details.movieTitle,
+    )
 }

@@ -2,11 +2,12 @@ package pl.fnfcinema.cinema.shows
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import pl.fnfcinema.cinema.BaseIntegrationTest
 import pl.fnfcinema.cinema.Err
-import pl.fnfcinema.cinema.IntegrationTest
 import pl.fnfcinema.cinema.Succ
 import pl.fnfcinema.cinema.aMovie
 import pl.fnfcinema.cinema.aShow
+import pl.fnfcinema.cinema.movies.MovieEntity
 import pl.fnfcinema.cinema.movies.MovieId
 import pl.fnfcinema.cinema.movies.Movies
 import pl.fnfcinema.cinema.requireSucc
@@ -22,7 +23,7 @@ import kotlin.time.toJavaDuration
 class ShowsTest(
     @Autowired val shows: Shows,
     @Autowired val movies: Movies,
-) : IntegrationTest() {
+) : BaseIntegrationTest() {
 
     @Test
     fun should_return_nearest_shows_for_limit_larger_than_actual_shows() {
@@ -140,17 +141,24 @@ class ShowsTest(
         )
     }
 
-    private class Data(movies: Movies, shows: Shows, time: Instant) {
+    private class Data(movies: Movies, val shows: Shows, time: Instant) {
         val movieA = movies.addMovie(aMovie())
         val movieB = movies.addMovie(aMovie())
 
-        val movieATomorrowShow =
-            shows.addShow(aShow(movie = movieA, startTime = time + 1.days.toJavaDuration())).requireSucc()
-        val movieANextWeekShow =
-            shows.addShow(aShow(movie = movieA, startTime = time + 7.days.toJavaDuration())).requireSucc()
-        val movieBDayAfterTomorrowShow =
-            shows.addShow(aShow(movie = movieB, startTime = time + 2.days.toJavaDuration())).requireSucc()
-        val movieBNextWeekShow =
-            shows.addShow(aShow(movie = movieB, startTime = time + 8.days.toJavaDuration())).requireSucc()
+        fun addShow(movie: MovieEntity, startTime: Instant): ShowDetails {
+            val show = shows.addShow(aShow(movie = movie, startTime = startTime)).requireSucc()
+            return ShowDetails(
+                movieId = movie.id!!,
+                movieTitle = movie.title,
+                startTime = show.startTime,
+                ticketPrice = show.ticketPrice,
+                id = show.id!!
+            )
+        }
+
+        val movieATomorrowShow = addShow(movie = movieA, startTime = time + 1.days.toJavaDuration())
+        val movieANextWeekShow = addShow(movie = movieA, startTime = time + 7.days.toJavaDuration())
+        val movieBDayAfterTomorrowShow = addShow(movie = movieB, startTime = time + 2.days.toJavaDuration())
+        val movieBNextWeekShow = addShow(movie = movieB, startTime = time + 8.days.toJavaDuration())
     }
 }

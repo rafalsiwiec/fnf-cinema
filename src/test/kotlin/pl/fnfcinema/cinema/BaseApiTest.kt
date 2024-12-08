@@ -12,7 +12,7 @@ import pl.fnfcinema.cinema.movies.Movies
 import pl.fnfcinema.cinema.shows.Shows
 
 @WebMvcTest
-abstract class ApiTest {
+abstract class BaseApiTest {
 
     @Autowired lateinit var mockMvc: MockMvc
     @Autowired lateinit var json: ObjectMapper
@@ -27,5 +27,8 @@ abstract class ApiTest {
 
     protected inline fun <reified T> ObjectMapper.parse(resp: MockHttpServletResponse): T =
         readValue(resp.contentAsByteArray, T::class.java)
+
+    protected inline fun <reified T> ObjectMapper.parseList(resp: MockHttpServletResponse): List<T> =
+        readerFor(T::class.java).readValues<T>(resp.contentAsByteArray).readAll()
 
 }

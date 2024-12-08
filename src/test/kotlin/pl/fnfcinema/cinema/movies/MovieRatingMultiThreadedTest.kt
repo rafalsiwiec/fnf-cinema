@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.springframework.beans.factory.annotation.Autowired
-import pl.fnfcinema.cinema.IntegrationTest
+import pl.fnfcinema.cinema.BaseIntegrationTest
 import pl.fnfcinema.cinema.aMovie
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 @EnabledIfSystemProperty(named = "tests.multithreaded", matches = "true")
 class MovieRatingMultiThreadedTest(
     @Autowired val movies: Movies,
-) : IntegrationTest() {
+) : BaseIntegrationTest() {
 
     lateinit var executor: ExecutorService
 

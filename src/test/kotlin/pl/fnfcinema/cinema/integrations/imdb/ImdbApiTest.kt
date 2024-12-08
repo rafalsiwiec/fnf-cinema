@@ -48,7 +48,7 @@ class ImdbApiTest {
                 "Action, Crime, Thriller",
                 "Rob Cohen",
                 BigDecimal("6.8"),
-                ImdbInt(427944),
+                ImdbLong(427944),
                 URI.create("https://m.media-amazon.com/images/M/MV5BZGRiMDE1NTMtMThmZS00YjE4LWI1ODQtNjRkZGZlOTg2MGE1XkEyXkFqcGc@._V1_SX300.jpg"),
                 "11 wins & 18 nominations"
             ),
