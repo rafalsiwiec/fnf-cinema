@@ -34,7 +34,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
 
-    // FIXME! change before PROD :--)
+    // this obviously should not be here but only in tests, but... I leave it for local demoing purpose only
     implementation("org.testcontainers:postgresql:1.20.4")
     implementation("org.springframework.boot:spring-boot-testcontainers:3.4.0")
 
